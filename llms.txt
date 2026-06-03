@@ -1,0 +1,47 @@
+# @master4n/master-cli (`mfn`)
+
+> A headless-friendly developer CLI that replaces boilerplate agents otherwise
+> regenerate on every machine: epoch/date conversions, JWT decoding, freeing
+> ports, finding files, and printing directory trees. Every command is designed
+> to be called by both humans and AI agents.
+
+## Agent contract (read this first)
+
+- **Discover commands:** `mfn capabilities --json` returns the full manifest
+  (`{ name, version, bin, conventions, commands:[{name,summary,examples}] }`).
+- **Machine output:** pass `--json`, OR just pipe the command (when stdout is not
+  a TTY the CLI auto-emits JSON). Output is exactly one object on stdout:
+  success → `{ "ok": true, ... }`, failure → `{ "ok": false, "error", "message" }`.
+- **Exit codes:** `0` success · `1` runtime error · `2` usage error.
+- **Clean channels:** the welcome banner, spinners, and logs go to **stderr**;
+  **stdout carries only the JSON result**, so `mfn <cmd> --json | jq` always works.
+- **No prompts in headless mode:** interactive prompts appear only on a TTY when
+  required input is missing; with `--json` or when piped, commands never block.
+- **Strict parsing:** unknown commands, unknown flags, and missing required
+  arguments are rejected with `{ "ok": false, "error": "UsageError", ... }` and
+  exit `2` — a typo never silently "succeeds".
+
+## Commands
+
+- `mfn epoch <value> [--tz] [--format] --json` — epoch → date (unit auto-detected:
+  s/ms/µs/ns). `mfn epoch --from <dateString> [--format] [--tz] --json` — date → epoch.
+  Fractional/invalid epochs fail with exit 1.
+- `mfn date [from] [--tz] [--format] [--in-format] [--in-tz] --json` — convert/format
+  a date across timezones; omit `from` for now. Returns epoch + UTC + target-zone.
+- `mfn decode -t <jwt> --json` — decode a JWT's header and payload (signature NOT verified).
+- `mfn kill -p <port...> [-y] --json` — kill the process(es) listening on the given
+  ports. Headless/`--json` (and `-y`) kill all matches without prompting; in headless
+  mode you MUST pass `-p` (no cached-port replay). Returns `{ killed, failed, notFound }`.
+- `mfn sc [pattern] [--ignore...] [--depth] [--limit] --json` — fuzzy-find files/folders
+  under the current directory. Returns `{ pattern, root, count, truncated, matches }`.
+- `mfn cts [--type text|svg|png|jpeg] [--ignore...] --json` — print the directory tree as
+  text (default) or export it to an image. Ignores node_modules/.git/.nx by default.
+- `mfn update [package] --json` — update the CLI (or a named package) globally via npm.
+- `mfn capabilities --json` — self-describing manifest of all of the above.
+
+## Notes
+
+- Time/date features are powered by `@master4n/temporal-transformer` v2 (Luxon-backed,
+  integer epochs; Luxon format tokens, e.g. `yyyy-MM-dd HH:mm:ss`).
+- Zero shell interpolation: process/port/package operations use `execFile` (no shell),
+  so inputs cannot inject commands.
