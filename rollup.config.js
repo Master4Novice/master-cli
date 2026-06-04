@@ -26,7 +26,24 @@ const config = [
         json(),
         copy({
           targets: [
-            { src: ["package.json", "README.md", "llms.txt", "LICENSE"], dest: "dist" }
+            { src: ["README.md", "llms.txt", "LICENSE"], dest: "dist" },
+            {
+              src: "package.json",
+              dest: "dist",
+              transform: (contents) => {
+                const pkg = JSON.parse(contents.toString());
+                // The package is published from dist/, so paths are relative to
+                // dist (no leading "./", which npm strips/warns about). Strip
+                // dev-only fields so the published tarball stays lean and clean.
+                pkg.main = "bin/index.js";
+                pkg.types = "bin/index.d.ts";
+                pkg.bin = { mfn: "bin/index.js" };
+                delete pkg.scripts;
+                delete pkg.devDependencies;
+                delete pkg.publishConfig; // pnpm-only; we publish ./dist directly
+                return JSON.stringify(pkg, null, 2);
+              }
+            }
           ]
         })
     ]

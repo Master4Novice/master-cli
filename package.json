@@ -2,17 +2,16 @@
   "name": "@master4n/master-cli",
   "version": "2.3.3",
   "description": "AI-agent-friendly command-line toolkit: timestamp/date conversion, JWT decoding, port killing, file finding, and directory trees — headless, --json, with a self-describing manifest.",
-  "main": "./bin/index.js",
-  "types": "./bin/index.d.ts",
   "type": "module",
-  "bin": {
-    "mfn": "./bin/index.js"
-  },
   "scripts": {
     "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
-    "build": "npm run clean && rollup --config"
+    "build": "npm run clean && rollup --config",
+    "publish:dryrun": "npm publish ./dist --dry-run",
+    "publish:npm": "npm publish ./dist --access public",
+    "prepublishOnly": "echo 'Do not publish from repo root. Run: npm run build && npm run publish:npm' && exit 1"
   },
   "repository": {
     "type": "git",
@@ -51,10 +50,6 @@
   "author": "dwivna",
   "license": "MIT",
   "homepage": "https://github.com/Master4Novice/master-cli#readme",
-  "publishConfig": {
-    "directory": "dist",
-    "access": "public"
-  },
   "contributors": [
     {
       "name": "dwivna"
