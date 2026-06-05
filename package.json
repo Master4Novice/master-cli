@@ -1,6 +1,6 @@
 {
   "name": "@master4n/master-cli",
-  "version": "2.4.1",
+  "version": "3.0.0",
   "description": "AI-agent-friendly command-line toolkit: timestamp/date conversion, JWT decoding, port killing, file finding, and directory trees — headless, --json, with a self-describing manifest.",
   "type": "module",
   "scripts": {

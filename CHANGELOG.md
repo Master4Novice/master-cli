@@ -4,82 +4,65 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.4.1] — 2026-06-05
-
-Phase 1b — security: clear the transitive `tmp` advisory.
-
-### Security / Changed
-
-- **Removed `inquirer-fuzzy-path`**, which bundled an ancient `inquirer@6` →
-  `external-editor` → `tmp@0.0.33` chain (the high/critical Dependabot alerts).
-  Runtime `npm audit` is now **0 vulnerabilities**. The modern `inquirer@9` used
-  by the other interactive fallbacks is unaffected and stays.
-- `sc`'s TTY-interactive picker is reimplemented with inquirer's built-in
-  input + list prompts (filter, then choose). Headless behaviour (`sc <pattern>
-  --json`) is unchanged.
-
-## [2.4.0] — 2026-06-05
-
-Phase 1a — new zero-dependency primitive commands (all via `node:crypto`/`node:net`),
-the boilerplate AI agents regenerate on every machine.
-
-### Added
-
-- **`id`** — generate UUID v4, time-ordered **UUID v7 (RFC 9562)**, or a URL-safe
-  nano id (unbiased 64-char alphabet). `-t`, `-n`, `--size`.
-- **`hash`** — md5/sha1/sha256/sha512 of a string, `--file`, or piped stdin;
-  hex/base64/base64url digest.
-- **`encode`** — base64 / base64url / hex / url, encode or `--decode`, text or stdin.
-- **`random`** — cryptographically secure random bytes (hex/base64/base64url) or an
-  unbiased `--password` (rejection sampling).
-- **`port`** — find a free port (or `-n` several), or `--check` a specific one. Pairs
-  with `kill`.
-- **`decode`** now also reports `expiry: { exp, expired, expiresInSeconds }` when the
-  JWT payload carries a numeric `exp`.
-
-All new commands honor the existing contract (`--json`, stdout-only data, exit
-0/1/2, errors via the JSON envelope) and are listed by `mfn capabilities` and the
-banner automatically.
-
-## [2.3.3] — 2026-06-03
+## [3.0.0] — 2026-06-05
 
 First release from the standalone repository (migrated out of the
-`Master4Novice/common` monorepo). Phase 0: make every existing command the best,
-most secure, AI-friendly version of itself.
+`Master4Novice/common` monorepo) and a **major rewrite** of the CLI into an
+AI-agent-friendly toolkit. Major because commands present in the last npm release
+(`2.3.1`) were removed. (Consolidates the unpublished 2.3.3 / 2.4.0 / 2.4.1
+development iterations.)
 
-### Added
+> **Upgrading from 2.3.1:** `2.3.1` is now tagged `legacy` on npm and deprecated.
+> `npm i -g @master4n/master-cli` installs 3.x. The `md`, `hra`, `sr`, and
+> `create @apollo:express` commands are gone; everything else is now headless +
+> `--json`. See the README for the new command set and contract.
+
+### Added — agent-friendly foundation
 
 - **`mfn capabilities [--json]`** — a self-describing manifest of every command,
-  for agent discovery, plus an `llms.txt` documenting the agent contract.
-- **`--json` on every command** — machine-readable `{ ok, ... }` on stdout; rich
-  human output (and interactive prompts) only on a TTY.
-- Enriched `--help`/`-h` for every command (usage, described options, examples)
-  and a root usage banner + epilogue pointing to `capabilities`/`llms.txt`.
+  plus an `llms.txt` documenting the agent contract.
+- **`--json` on every command** — one machine-readable `{ ok, ... }` object on
+  stdout; rich human output (and interactive prompts) only on a TTY.
+- Headless-first execution, **stable exit codes** (`0` ok / `1` error / `2` usage),
+  `.strict()` parsing (unknown command/flag → exit 2), logs/banner on **stderr**.
+- Enriched `--help`/`-h` for every command (usage, options, examples); a banner
+  with version/runtime, a live clock, the tool list, and a rotating tip.
+
+### Added — new primitive commands (zero-dependency, via `node:crypto`/`node:net`)
+
+- **`id`** — UUID v4, time-ordered **UUID v7 (RFC 9562)**, or URL-safe nano id.
+- **`hash`** — md5/sha1/sha256/sha512 of a string, `--file`, or stdin.
+- **`encode`** — base64 / base64url / hex / url, encode or `--decode`.
+- **`random`** — secure random bytes, or an unbiased `--password`.
+- **`port`** — find a free port (or `-n` several), or `--check` one. Pairs with `kill`.
+- **`decode`** also reports `expiry: { exp, expired, expiresInSeconds }`.
 
 ### Changed
 
 - **Time commands migrated to `@master4n/temporal-transformer` v2** (Luxon-backed;
   `yyyy-MM-dd` tokens; integer epochs). Dropped `moment`/`moment-timezone`.
-- Commands are **headless-first**: they run from flags/stdin with stable exit
-  codes (`0` ok / `1` error / `2` usage); logs and the banner go to **stderr** so
-  stdout stays a clean data channel.
-- The welcome banner now renders only on a TTY (never with `--json`), enriched
-  with version/runtime, a live clock, the tool list, and a rotating tip.
 
 ### Removed
 
-- The `md`, `hra`, `sr`, and `create @apollo:express` commands, plus their dead
-  support code and unused dependencies.
+- The `md`, `hra`, `sr`, and `create @apollo:express` commands and their dead
+  support code / unused dependencies.
 
-### Fixed (Phase 0.1 — from an adversarial agent review, 76→91)
+### Fixed (hardened to 91/100 in an adversarial agent review)
 
 - **Command injection** in `update`/`kill`/`getLatestVersion` — all process calls
   use `execFile` (no shell).
-- **`cts` crash** on a broken symlink / unreadable entry — now defensive, always
-  emits valid JSON.
+- **`cts` crash** on a broken symlink / unreadable entry — now always emits JSON.
 - **Parser-layer errors honor the contract** — `.strict()` + `.demandCommand()` +
-  a `.fail()` handler emit the `{ ok:false, error, message }` envelope with exit 2
-  for unknown commands/flags, missing args, and bad input.
+  a `.fail()` JSON envelope (exit 2) for unknown commands/flags and missing args.
 - `sc` validates `--limit`/`--depth`; `epoch --from` shape parity (`relative`);
-  `kill` is stateless in headless mode (no cached-port replay); `mfn --version`
-  reports the real version.
+  `kill` stateless in headless mode; `mfn --version` reports the real version.
+
+### Security
+
+- Removed `inquirer-fuzzy-path` (bundled `inquirer@6` → `external-editor` →
+  `tmp@0.0.33`). Runtime `npm audit` is now **0 vulnerabilities**.
+
+### Tooling
+
+- vitest suite (subprocess contract + unit tests) and CI (Node 20/22:
+  typecheck → build → test → publish dry-run).
