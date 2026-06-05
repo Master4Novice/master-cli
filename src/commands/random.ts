@@ -42,19 +42,25 @@ const builder = (yargs: any) =>
     .example('mfn random -b 16 -e base64url --json', '16 bytes, base64url')
     .example('mfn random -p -l 32 --json', 'a 32-char password');
 
+// Upper bounds keep a fat-fingered huge value from overflowing randomBytes
+// (RangeError) — which, in a sync handler, would escape as a stack trace with no
+// JSON envelope. Generous for any real CLI use.
+const MAX_BYTES = 1_048_576; // 1 MiB
+const MAX_PASSWORD = 4096;
+
 const handler = (argv: any) => {
   if (argv.password) {
     const length = Number(argv.length);
-    if (!Number.isInteger(length) || length < 1) {
-      return fail(argv, 'InvalidLength', '--length must be a positive integer.', 2);
+    if (!Number.isInteger(length) || length < 1 || length > MAX_PASSWORD) {
+      return fail(argv, 'InvalidLength', `--length must be an integer in 1..${MAX_PASSWORD}.`, 2);
     }
     const value = pick(length, PASSWORD_ALPHABET);
     return emit(argv, { kind: 'password', length, value }, () => console.log(value));
   }
 
   const bytes = Number(argv.bytes);
-  if (!Number.isInteger(bytes) || bytes < 1) {
-    return fail(argv, 'InvalidBytes', '--bytes must be a positive integer.', 2);
+  if (!Number.isInteger(bytes) || bytes < 1 || bytes > MAX_BYTES) {
+    return fail(argv, 'InvalidBytes', `--bytes must be an integer in 1..${MAX_BYTES}.`, 2);
   }
   const encoding = String(argv.encoding) as 'hex' | 'base64' | 'base64url';
   const value = randomBytes(bytes).toString(encoding);

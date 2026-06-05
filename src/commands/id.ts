@@ -61,15 +61,20 @@ const builder = (yargs: any) =>
     .example('mfn id -t uuid7 -n 3 --json', 'three time-ordered UUID v7')
     .example('mfn id -t nano --size 12 --json', 'a 12-char URL-safe id');
 
+// Upper bounds so a huge value can't overflow Array.from / the nano loop
+// (RangeError) and escape this sync handler as a bare stack trace.
+const MAX_COUNT = 100_000;
+const MAX_SIZE = 4096;
+
 const handler = (argv: any) => {
   const type = String(argv.type);
   const count = Number(argv.count);
   const size = Number(argv.size);
-  if (!Number.isInteger(count) || count < 1) {
-    return fail(argv, 'InvalidCount', '--count must be a positive integer.', 2);
+  if (!Number.isInteger(count) || count < 1 || count > MAX_COUNT) {
+    return fail(argv, 'InvalidCount', `--count must be an integer in 1..${MAX_COUNT}.`, 2);
   }
-  if (type === 'nano' && (!Number.isInteger(size) || size < 1)) {
-    return fail(argv, 'InvalidSize', '--size must be a positive integer.', 2);
+  if (type === 'nano' && (!Number.isInteger(size) || size < 1 || size > MAX_SIZE)) {
+    return fail(argv, 'InvalidSize', `--size must be an integer in 1..${MAX_SIZE}.`, 2);
   }
   const ids = Array.from({ length: count }, () =>
     type === 'nano' ? nano(size) : generate(type),

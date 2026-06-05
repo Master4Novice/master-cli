@@ -70,7 +70,10 @@ const handler = async (argv: any) => {
   const ports = held.map((h) => h.port);
   held.forEach((h) => h.close());
 
-  emit(argv, count === 1 ? { port: ports[0] } : { count, ports }, () =>
+  // Stable shape regardless of count: always { count, ports }, plus `port` as a
+  // convenience alias for the first — so an agent requesting N=1 sees the same
+  // keys as N>1.
+  emit(argv, { count, ports, port: ports[0] }, () =>
     ports.forEach((p) => console.log(p)),
   );
 };

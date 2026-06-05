@@ -15,17 +15,24 @@ function encode(text: string, codec: Codec): string {
   }
 }
 
+// Buffer.from is lenient — it silently drops invalid characters (e.g.
+// `from('zzz','hex')` → empty) instead of erroring. Validate the input charset
+// first so decoding garbage fails loudly rather than returning "".
+const VALID: Partial<Record<Codec, RegExp>> = {
+  hex: /^[0-9a-fA-F]*$/,
+  base64: /^[A-Za-z0-9+/]*={0,2}$/,
+  base64url: /^[A-Za-z0-9_-]*$/,
+};
+
 function decode(text: string, codec: Codec): string {
-  switch (codec) {
-    case 'base64':
-      return Buffer.from(text, 'base64').toString('utf8');
-    case 'base64url':
-      return Buffer.from(text, 'base64url').toString('utf8');
-    case 'hex':
-      return Buffer.from(text, 'hex').toString('utf8');
-    case 'url':
-      return decodeURIComponent(text);
+  if (codec === 'url') return decodeURIComponent(text);
+
+  const pattern = VALID[codec]!;
+  const compact = codec === 'hex' ? text : text.trim();
+  if (!pattern.test(compact) || (codec === 'hex' && compact.length % 2 !== 0)) {
+    throw new Error(`not valid ${codec}`);
   }
+  return Buffer.from(compact, codec).toString('utf8');
 }
 
 const command = 'encode [text]';

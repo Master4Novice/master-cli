@@ -4,6 +4,29 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] — 2026-06-05
+
+Phase 1 follow-up — close a boundary regression an adversarial review found in the
+new primitives (score 88 → back into the low 90s).
+
+### Fixed
+
+- **`random` and `id` no longer crash on a huge value.** The two new *synchronous*
+  handlers validated their lower bound but not the upper, so `random -b 2147483648`
+  or `id -n 4294967296` overflowed `randomBytes`/`Array.from` and escaped as a raw
+  stack trace with empty stdout (a sync throw bypasses the global `.fail()`). They
+  now reject out-of-range values via the JSON envelope (`InvalidBytes`/`InvalidLength`/
+  `InvalidCount`/`InvalidSize`, exit 2), matching their existing lower-bound checks.
+  Caps: bytes ≤ 1 MiB, password/nano ≤ 4096, id count ≤ 100 000.
+- **`encode --decode` rejects garbage** for byte codecs instead of silently
+  returning `""` — invalid hex/base64/base64url now fails with `CodecError` (exit 1).
+- **`port` output shape is stable** across counts: always `{ count, ports, port }`
+  (previously `-n 1` returned only `{ port }`).
+
+### Tooling
+
+- Added boundary tests (the exact huge-input repros) so the crash class can't return.
+
 ## [3.0.0] — 2026-06-05
 
 First release from the standalone repository (migrated out of the

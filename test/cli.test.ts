@@ -186,3 +186,54 @@ describe('sc', () => {
     expect(r.json.error).toBe('InvalidLimit');
   });
 });
+
+describe('boundary validation (huge inputs must not crash — JSON envelope, exit 2)', () => {
+  it('random --bytes over the cap → InvalidBytes, valid JSON, no stack trace', () => {
+    const r = run('random', '-b', '2147483648', '--json');
+    expect(r.code).toBe(2);
+    expect(r.singleObject).toBe(true);
+    expect(r.json.error).toBe('InvalidBytes');
+  });
+
+  it('random --password --length over the cap → InvalidLength', () => {
+    const r = run('random', '-p', '-l', '1000000000', '--json');
+    expect(r.code).toBe(2);
+    expect(r.json.error).toBe('InvalidLength');
+  });
+
+  it('id --count over the cap → InvalidCount, valid JSON, no stack trace', () => {
+    const r = run('id', '-n', '4294967296', '--json');
+    expect(r.code).toBe(2);
+    expect(r.singleObject).toBe(true);
+    expect(r.json.error).toBe('InvalidCount');
+  });
+
+  it('id nano --size over the cap → InvalidSize', () => {
+    const r = run('id', '-t', 'nano', '--size', '1000000000', '--json');
+    expect(r.code).toBe(2);
+    expect(r.json.error).toBe('InvalidSize');
+  });
+});
+
+describe('encode decode rejects garbage instead of returning ""', () => {
+  it('invalid hex → CodecError, exit 1', () => {
+    const r = run('encode', 'zzz', '--as', 'hex', '-d', '--json');
+    expect(r.code).toBe(1);
+    expect(r.json.ok).toBe(false);
+    expect(r.json.error).toBe('CodecError');
+  });
+
+  it('valid hex still decodes', () => {
+    const r = run('encode', '68656c6c6f', '--as', 'hex', '-d', '--json');
+    expect(r.json.output).toBe('hello');
+  });
+});
+
+describe('port shape is stable across counts', () => {
+  it('single and multi both expose count + ports', () => {
+    const one = run('port', '--json');
+    expect(one.json.count).toBe(1);
+    expect(Array.isArray(one.json.ports)).toBe(true);
+    expect(one.json.port).toBe(one.json.ports[0]);
+  });
+});
