@@ -4,6 +4,20 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] — 2026-06-05
+
+Phase 1b — security: clear the transitive `tmp` advisory.
+
+### Security / Changed
+
+- **Removed `inquirer-fuzzy-path`**, which bundled an ancient `inquirer@6` →
+  `external-editor` → `tmp@0.0.33` chain (the high/critical Dependabot alerts).
+  Runtime `npm audit` is now **0 vulnerabilities**. The modern `inquirer@9` used
+  by the other interactive fallbacks is unaffected and stays.
+- `sc`'s TTY-interactive picker is reimplemented with inquirer's built-in
+  input + list prompts (filter, then choose). Headless behaviour (`sc <pattern>
+  --json`) is unchanged.
+
 ## [2.4.0] — 2026-06-05
 
 Phase 1a — new zero-dependency primitive commands (all via `node:crypto`/`node:net`),

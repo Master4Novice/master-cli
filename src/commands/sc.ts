@@ -5,7 +5,6 @@ import {
   getCacheDirectory,
   saveIgnoresToCache,
 } from '../utility';
-import fuzzyPath from 'inquirer-fuzzy-path';
 import fuzzy from 'fuzzy';
 import fs from 'fs-extra';
 import path from 'path';
@@ -14,8 +13,6 @@ import { withJsonFlag, canPrompt, emit, fail } from '../utility/io';
 const logger = Logger();
 const SC_IGNORE_CACHE = path.join(getCacheDirectory(), 'sc_ignore.json');
 const DEFAULT_IGNORES = ['node_modules', '.git', 'dist', 'build', '.nx', 'coverage'];
-
-inquirer.registerPrompt('fuzzypath', fuzzyPath);
 
 interface SCIgnore {
   ignores: string[];
@@ -54,24 +51,44 @@ function walk(root: string, ignores: string[], maxDepth: number): string[] {
   return out;
 }
 
-/** TTY-only interactive fuzzy picker (prints the chosen path). */
-async function interactive(argv: any, root: string, ignores: string[]): Promise<void> {
-  const { filePath } = await inquirer.prompt([
+/**
+ * TTY-only interactive picker: ask for a fuzzy filter, then choose from the
+ * matches. Uses inquirer's built-in input + list prompts (no inquirer-fuzzy-path,
+ * which dragged in an ancient inquirer@6 → external-editor → tmp chain).
+ */
+async function interactive(
+  argv: any,
+  root: string,
+  ignores: string[],
+  depth: number,
+  limit: number,
+): Promise<void> {
+  const all = walk(root, ignores, depth);
+  const { pattern } = await inquirer.prompt([
+    { type: 'input', name: 'pattern', message: colorQuestions('Filter (fuzzy, blank = all):') },
+  ]);
+  const term = String(pattern ?? '').trim();
+  const matched = term ? fuzzy.filter(term, all).map((r) => r.original) : all;
+  const choices = matched.slice(0, limit);
+  if (choices.length === 0) {
+    return emit(argv, { pattern: term || null, root, count: 0, matches: [] }, () =>
+      logger.warn('No matches.'),
+    );
+  }
+  const { selected } = await inquirer.prompt([
     {
-      type: 'fuzzypath',
-      name: 'filePath',
-      excludePath: (nodePath: string) => ignores.some((e) => nodePath.includes(e)),
-      excludeFilter: (nodePath: string) => nodePath === '.',
-      message: colorQuestions('Select a folder/file:'),
-      itemType: 'any',
-      depthLimit: 5,
-      rootPath: root,
+      type: 'list',
+      name: 'selected',
+      message: colorQuestions('Select a path:'),
+      choices,
+      pageSize: 15,
+      loop: false,
     },
   ]);
-  const stats = fs.statSync(filePath);
-  emit(argv, { path: filePath, type: stats.isDirectory() ? 'directory' : 'file' }, () => {
-    logger.info(`${stats.isDirectory() ? 'Directory' : 'File'}: ${filePath}`);
-    if (stats.isDirectory()) logger.info(`cd ${filePath}`);
+  const stats = fs.statSync(path.join(root, selected));
+  emit(argv, { path: selected, type: stats.isDirectory() ? 'directory' : 'file' }, () => {
+    logger.info(`${stats.isDirectory() ? 'Directory' : 'File'}: ${selected}`);
+    if (stats.isDirectory()) logger.info(`cd ${selected}`);
   });
 }
 
@@ -116,7 +133,7 @@ const handler = async (argv: any) => {
 
   // Headless when a pattern is given or output isn't a terminal; else interactive.
   if (argv.pattern === undefined && canPrompt(argv)) {
-    return interactive(argv, root, ignores);
+    return interactive(argv, root, ignores, depth, limit);
   }
 
   const all = walk(root, ignores, depth);
