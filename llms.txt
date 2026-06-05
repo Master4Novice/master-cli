@@ -23,12 +23,23 @@
 
 ## Commands
 
+- `mfn id [-t uuid|uuid7|nano] [-n count] [--size N] --json` — generate ids. UUID v4
+  (default), time-ordered UUID v7 (RFC 9562), or a URL-safe nano id. Returns `{ type, count, ids }`.
+- `mfn hash [text] [-a md5|sha1|sha256|sha512] [-f file] [-e hex|base64|base64url] --json`
+  — hash a string, a file, or piped stdin. Returns `{ algo, encoding, source, bytes, hash }`.
+- `mfn encode [text] [--as base64|base64url|hex|url] [-d] --json` — encode (or `-d` decode)
+  text or stdin. Returns `{ operation, codec, input, output }`.
+- `mfn random [-b bytes] [-e hex|base64|base64url] | [-p [-l length]] --json` — secure random
+  bytes, or an unbiased password. Returns `{ kind, ..., value }`.
+- `mfn port [--json] | [-c port] | [-n count]` — find free port(s), or check a specific port.
+  Returns `{ port }` / `{ count, ports }` / `{ port, available }`.
 - `mfn epoch <value> [--tz] [--format] --json` — epoch → date (unit auto-detected:
   s/ms/µs/ns). `mfn epoch --from <dateString> [--format] [--tz] --json` — date → epoch.
   Fractional/invalid epochs fail with exit 1.
 - `mfn date [from] [--tz] [--format] [--in-format] [--in-tz] --json` — convert/format
   a date across timezones; omit `from` for now. Returns epoch + UTC + target-zone.
 - `mfn decode -t <jwt> --json` — decode a JWT's header and payload (signature NOT verified).
+  If the payload has a numeric `exp`, also returns `expiry: { exp, expired, expiresInSeconds }`.
 - `mfn kill -p <port...> [-y] --json` — kill the process(es) listening on the given
   ports. Headless/`--json` (and `-y`) kill all matches without prompting; in headless
   mode you MUST pass `-p` (no cached-port replay). Returns `{ killed, failed, notFound }`.

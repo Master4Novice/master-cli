@@ -53,4 +53,29 @@ export const COMMANDS: readonly CommandInfo[] = [
     summary: 'Update the CLI or a specified package to the latest version',
     examples: ['mfn update --json', 'mfn update <package> --json'],
   },
+  {
+    name: 'id',
+    summary: 'Generate identifiers (UUID v4/v7 or URL-safe nano id)',
+    examples: ['mfn id --json', 'mfn id -t uuid7 -n 3 --json'],
+  },
+  {
+    name: 'hash',
+    summary: 'Hash a string, file, or stdin (md5/sha1/sha256/sha512)',
+    examples: ['mfn hash hello --json', 'mfn hash -a md5 -f ./file.txt --json'],
+  },
+  {
+    name: 'encode',
+    summary: 'Encode/decode text (base64, base64url, hex, url)',
+    examples: ['mfn encode hello --json', 'mfn encode aGVsbG8= -d --json'],
+  },
+  {
+    name: 'random',
+    summary: 'Generate secure random bytes or a password',
+    examples: ['mfn random --json', 'mfn random -p -l 32 --json'],
+  },
+  {
+    name: 'port',
+    summary: 'Find a free port, or check whether a specific port is available',
+    examples: ['mfn port --json', 'mfn port -c 3000 --json'],
+  },
 ] as const;

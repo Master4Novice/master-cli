@@ -78,6 +78,17 @@ export const canPrompt = (argv: { json?: boolean }): boolean =>
   isTTY() && !argv?.json;
 
 /**
+ * Read all of stdin as a UTF-8 string. Returns '' immediately when stdin is a
+ * TTY (nothing piped). Lets commands accept input via `echo x | mfn ...`.
+ */
+export async function readStdin(): Promise<string> {
+  if (process.stdin.isTTY) return '';
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+/**
  * Emit a `{ ok: false, error, message }` failure and exit, WITHOUT a parsed
  * argv. Used by the yargs `.fail()` handler, where errors originate in the
  * parser layer (missing required arg, unknown command/flag, coerce throw)

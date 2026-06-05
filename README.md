@@ -50,9 +50,14 @@ mfn capabilities --json   # machine-readable manifest of all commands
 | Command | What it does | Example |
 | ------- | ------------ | ------- |
 | `capabilities` | Self-describing manifest of every command | `mfn capabilities --json` |
+| `id` | Generate IDs — UUID v4, time-ordered UUID v7, or URL-safe nano | `mfn id --json` · `mfn id -t uuid7 -n 3 --json` |
+| `hash` | Hash a string, file, or stdin (md5/sha1/sha256/sha512) | `mfn hash hello --json` · `mfn hash -f ./x --json` |
+| `encode` | Encode/decode text — base64, base64url, hex, url | `mfn encode hi --json` · `mfn encode aGk= -d --json` |
+| `random` | Secure random bytes, or an unbiased password | `mfn random --json` · `mfn random -p -l 32 --json` |
+| `port` | Find a free port, or check if one is available | `mfn port --json` · `mfn port -c 3000 --json` |
 | `epoch` | Convert between epoch timestamps and dates (auto-detects s/ms/µs/ns) | `mfn epoch 1622547800 --json` · `mfn epoch --from 2021-06-01T11:43:20Z --json` |
 | `date` | Convert/format a date across timezones (defaults to now) | `mfn date 2024-07-04T15:30:30Z --tz America/New_York --json` |
-| `decode` | Decode a JWT (header + payload; signature **not** verified) | `mfn decode -t <jwt> --json` |
+| `decode` | Decode a JWT (header + payload + expiry; signature **not** verified) | `mfn decode -t <jwt> --json` |
 | `kill` | Kill the process(es) listening on given ports | `mfn kill -p 3000 8080 -y --json` |
 | `sc` | Fuzzy-find files/folders under the current directory | `mfn sc service --json` |
 | `cts` | Print (or export) a tree of the current directory | `mfn cts --json` · `mfn cts -t png` |

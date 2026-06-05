@@ -41,12 +41,30 @@ const handler = (argv: any) => {
     return fail(argv, 'DecodeError', `Could not decode JWT: ${message}`);
   }
 
-  emit(argv, { header, payload }, () => {
+  // Expiry helper: if the payload carries a numeric `exp` (seconds since epoch,
+  // per RFC 7519), surface whether it's expired and seconds remaining — so an
+  // agent doesn't have to do the math.
+  const exp = (payload as { exp?: unknown })?.exp;
+  let expiry: { exp: number; expired: boolean; expiresInSeconds: number } | undefined;
+  if (typeof exp === 'number' && Number.isFinite(exp)) {
+    const expiresInSeconds = Math.round(exp - Date.now() / 1000);
+    expiry = { exp, expired: expiresInSeconds <= 0, expiresInSeconds };
+  }
+
+  emit(argv, { header, payload, ...(expiry ? { expiry } : {}) }, () => {
     logger.info('Decoded JWT (signature NOT verified)');
     console.log(chalk.cyanBright.bold('header:'));
     console.log(chalk.greenBright(JSON.stringify(header, null, 2)));
     console.log(chalk.cyanBright.bold('payload:'));
     console.log(chalk.greenBright(JSON.stringify(payload, null, 2)));
+    if (expiry) {
+      console.log(
+        chalk.cyanBright.bold('expiry: ') +
+          (expiry.expired
+            ? chalk.red(`expired ${-expiry.expiresInSeconds}s ago`)
+            : chalk.green(`valid for ${expiry.expiresInSeconds}s`)),
+      );
+    }
   });
 };
 

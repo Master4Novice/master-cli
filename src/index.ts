@@ -1,20 +1,33 @@
 import instance from './instance';
-import { cts, sc, deco, date, epoch, killProcess, update, capabilities } from './commands';
+import {
+  cts, sc, deco, date, epoch, killProcess, update, capabilities,
+  id, hash, encode, random, port,
+} from './commands';
 import { CommandBuilder } from './utility';
 import { failEnvelope } from './utility/io';
 import pkg from '../package.json';
 
+const add = (c: { command: string; describe: string; builder: any; handler: any }) =>
+  CommandBuilder(instance).add(c.command, c.describe, c.builder, c.handler);
+
 /**Discovery */
-CommandBuilder(instance).add(capabilities.command, capabilities.describe, capabilities.builder, capabilities.handler);
-/**Add commands */
-CommandBuilder(instance).add(update.command, update.describe, update.builder, update.handler);
-CommandBuilder(instance).add(epoch.command, epoch.describe, epoch.builder, epoch.handler);
-CommandBuilder(instance).add(date.command, date.describe, date.builder, date.handler);
-CommandBuilder(instance).add(deco.command, deco.describe, deco.builder, deco.handler);
-/**OS specific commands */
-CommandBuilder(instance).add(sc.command, sc.describe, sc.builder, sc.handler);
-CommandBuilder(instance).add(killProcess.command, killProcess.describe, killProcess.builder, killProcess.handler);
-CommandBuilder(instance).add(cts.command, cts.describe, cts.builder, cts.handler);
+add(capabilities);
+/**Generators & codecs (zero-dependency primitives) */
+add(id);
+add(hash);
+add(encode);
+add(random);
+/**Time */
+add(epoch);
+add(date);
+add(deco);
+/**OS / filesystem */
+add(port);
+add(killProcess);
+add(sc);
+add(cts);
+/**Maintenance */
+add(update);
 
 
 instance
