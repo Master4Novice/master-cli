@@ -1,4 +1,4 @@
-import { createServer } from 'node:net';
+import { createServer, createConnection } from 'node:net';
 import { withJsonFlag, emit, fail } from '../utility/io';
 
 /** Resolve to a free port (0 lets the OS pick an available ephemeral port). */
@@ -15,14 +15,41 @@ function findFreePort(preferred = 0): Promise<number> {
   });
 }
 
-/** True if `port` can be bound right now (i.e. it's free). */
-function isFree(port: number): Promise<boolean> {
+/**
+ * Is something listening on `port` at `host`? Connect-probe: a successful TCP
+ * connect means a listener accepted us; ECONNREFUSED means nothing is there.
+ *
+ * Connect-probing (rather than bind-probing) is what makes this correct: on
+ * macOS/BSD you can bind the wildcard `0.0.0.0` even while `127.0.0.1:port` is
+ * held, so a bind test misses address-specific listeners. A connect reaches the
+ * listener however it bound.
+ */
+function listening(port: number, host: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const srv = createServer();
-    srv.unref();
-    srv.on('error', () => resolve(false));
-    srv.listen(port, () => srv.close(() => resolve(true)));
+    const sock = createConnection({ port, host });
+    sock.setTimeout(500);
+    const done = (result: boolean) => {
+      sock.destroy();
+      resolve(result);
+    };
+    sock.once('connect', () => done(true));
+    sock.once('timeout', () => done(false));
+    sock.once('error', () => done(false)); // ECONNREFUSED → free
   });
+}
+
+/**
+ * True if `port` is free on loopback for both IPv4 and IPv6 — i.e. nothing is
+ * listening reachably via 127.0.0.1 or ::1. This catches servers bound to
+ * `0.0.0.0`, `127.0.0.1`, `::`, or `::1` (the realistic local cases); a server
+ * bound only to a specific non-loopback interface is out of scope.
+ */
+async function isFree(port: number): Promise<boolean> {
+  const [v4, v6] = await Promise.all([
+    listening(port, '127.0.0.1'),
+    listening(port, '::1'),
+  ]);
+  return !v4 && !v6;
 }
 
 const command = 'port';

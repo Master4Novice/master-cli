@@ -40,7 +40,7 @@ function runDate(argv: DateArgs): void {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const code = error instanceof Error ? error.name : 'ParseError';
-    return fail(argv, code, message);
+    return fail(argv, code, message, 2); // bad input → usage error
   }
 
   let utc: string;
@@ -51,7 +51,7 @@ function runDate(argv: DateArgs): void {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const code = error instanceof Error ? error.name : 'TimezoneError';
-    return fail(argv, code, message);
+    return fail(argv, code, message, 2); // bad input (e.g. unknown timezone) → usage error
   }
 
   emit(

@@ -28,7 +28,7 @@ const handler = (argv: any) => {
   const token = String(argv.token).replace(/^Bearer\s+/i, '').trim();
   const parts = token.split('.');
   if (parts.length !== 3) {
-    return fail(argv, 'InvalidJWT', 'Invalid JWT structure: expected three dot-separated segments.');
+    return fail(argv, 'InvalidJWT', 'Invalid JWT structure: expected three dot-separated segments.', 2);
   }
 
   let header: unknown;
@@ -38,7 +38,7 @@ const handler = (argv: any) => {
     payload = decodeSegment(parts[1]);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return fail(argv, 'DecodeError', `Could not decode JWT: ${message}`);
+    return fail(argv, 'DecodeError', `Could not decode JWT: ${message}`, 2);
   }
 
   // Expiry helper: if the payload carries a numeric `exp` (seconds since epoch,

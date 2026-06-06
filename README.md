@@ -89,6 +89,15 @@ mfn cts --json | jq -r '.tree'
 - Process/port/package operations use `execFile` (no shell), so inputs cannot
   inject commands.
 
+## Part of the @master4n toolkit
+
+A small ecosystem of focused, agent-friendly packages:
+
+- [`@master4n/temporal-transformer`](https://www.npmjs.com/package/@master4n/temporal-transformer) — epoch/timestamp ↔ date conversion with auto unit-detection and IANA timezones (Luxon-backed)
+- [`@master4n/temporal-transformer-codemod`](https://www.npmjs.com/package/@master4n/temporal-transformer-codemod) — codemod to migrate temporal-transformer v1→v2
+- [`@master4n/http-status`](https://www.npmjs.com/package/@master4n/http-status) — machine-readable HTTP status-code registry for apps & AI agents
+- [`@master4n/decorators`](https://www.npmjs.com/package/@master4n/decorators) — zero-dependency TypeScript decorators (DI, validation, resilience, redaction)
+
 ## License
 
 MIT © [Master4Novice](https://github.com/Master4Novice)

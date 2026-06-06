@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:net';
 
 const BIN = fileURLToPath(new URL('../dist/bin/index.js', import.meta.url));
 
@@ -147,6 +148,28 @@ describe('port', () => {
     expect(typeof r.json.port).toBe('number');
     expect(r.json.port).toBeGreaterThan(0);
   });
+
+  it('-c reports an IPv4-only-occupied port as unavailable (dual-stack probe)', async () => {
+    const PORT = 59555;
+    const srv = createServer();
+    await new Promise<void>((res, rej) => {
+      srv.once('error', rej);
+      srv.listen(PORT, '127.0.0.1', res);
+    });
+    try {
+      const r = run('port', '-c', String(PORT), '--json');
+      expect(r.json.ok).toBe(true);
+      expect(r.json.available).toBe(false);
+    } finally {
+      await new Promise<void>((res) => srv.close(() => res()));
+    }
+  });
+
+  it('-c reports a free port as available', () => {
+    const free = run('port', '--json').json.port;
+    const r = run('port', '-c', String(free), '--json');
+    expect(r.json.available).toBe(true);
+  });
 });
 
 describe('epoch', () => {
@@ -156,10 +179,16 @@ describe('epoch', () => {
     expect(r.json.unit).toBe('seconds');
   });
 
-  it('rejects a fractional epoch with exit 1', () => {
+  it('rejects a fractional epoch with exit 2 (bad input)', () => {
     const r = run('epoch', '1622547800.5', '--json');
-    expect(r.code).toBe(1);
+    expect(r.code).toBe(2);
     expect(r.json.ok).toBe(false);
+  });
+
+  it('rejects an empty epoch value with exit 2', () => {
+    const r = run('epoch', '', '--json');
+    expect(r.code).toBe(2);
+    expect(r.json.error).toBe('MissingInput');
   });
 });
 
@@ -172,9 +201,9 @@ describe('decode', () => {
     expect(r.json.expiry.expired).toBe(true);
   });
 
-  it('rejects a malformed JWT with exit 1', () => {
+  it('rejects a malformed JWT with exit 2 (bad input)', () => {
     const r = run('decode', '-t', 'not-a-jwt', '--json');
-    expect(r.code).toBe(1);
+    expect(r.code).toBe(2);
     expect(r.json.ok).toBe(false);
   });
 });

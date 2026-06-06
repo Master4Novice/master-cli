@@ -4,6 +4,27 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] — 2026-06-06
+
+Correctness + consistency from a cold-install review, plus discoverability.
+
+### Fixed
+
+- **`port -c` now probes both IPv4 and IPv6.** It bound only IPv6 `::`, so a port
+  occupied by an IPv4-only listener (`app.listen(3000,'0.0.0.0')`) was wrongly
+  reported `available:true`. It now bind-tests `0.0.0.0` **and** `::` and is free
+  only if both are (an unsupported family is ignored).
+- **Uniform exit codes for bad input.** `epoch`/`date`/`decode` validation errors
+  (fractional/NaN epoch, unknown timezone, malformed JWT) now exit **2** (usage),
+  matching `id`/`random`/`port` — previously exit 1.
+- **`epoch ''`** (empty value) is now a usage error (`MissingInput`, exit 2)
+  instead of silently resolving to epoch 0.
+
+### Changed
+
+- Discoverability: broadened keywords and added a "Part of the @master4n toolkit"
+  section cross-linking the sibling packages.
+
 ## [3.0.1] — 2026-06-05
 
 Phase 1 follow-up — close a boundary regression an adversarial review found in the

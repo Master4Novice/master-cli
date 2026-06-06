@@ -15,7 +15,7 @@ function epochToDate(argv: any, value: number): void {
     // temporal-transformer v2 rejects fractional/out-of-range epochs with a
     // clear name; surface it as the machine error code.
     const code = error instanceof Error ? error.name : 'InvalidEpoch';
-    return fail(argv, code, message);
+    return fail(argv, code, message, 2); // bad input → usage error
   }
   emit(
     argv,
@@ -49,7 +49,7 @@ function dateToEpoch(argv: any, input: string, format?: string, tz?: string): vo
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const code = error instanceof Error ? error.name : 'ParseError';
-    return fail(argv, code, message);
+    return fail(argv, code, message, 2); // bad input → usage error
   }
   // Reuse the same relative-time string the epoch→date path emits, so both
   // directions share a consistent shape (utc/local/timezone/relative).
@@ -126,8 +126,10 @@ const describe = 'Convert between epoch timestamps and dates (auto-detects unit)
 const builder = (yargs: any) =>
   withJsonFlag(yargs)
     .positional('value', {
+      // Taken as a string so we can distinguish an empty value ("" → usage
+      // error) from a real 0, and let temporal-transformer reject non-numbers.
       describe: 'Epoch value to convert to a date (s / ms / µs / ns auto-detected)',
-      type: 'number',
+      type: 'string',
     })
     .option('from', {
       type: 'string',
@@ -149,7 +151,11 @@ const handler = async (argv: any) => {
     return dateToEpoch(argv, String(argv.from), argv.format, argv.tz);
   }
   if (argv.value !== undefined && argv.value !== null) {
-    return epochToDate(argv, Number(argv.value));
+    const raw = String(argv.value).trim();
+    if (raw === '') {
+      return fail(argv, 'MissingInput', 'Epoch value is empty. Provide a numeric epoch.', 2);
+    }
+    return epochToDate(argv, Number(raw));
   }
   if (canPrompt(argv)) {
     return interactive(argv);
