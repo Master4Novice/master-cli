@@ -15,9 +15,17 @@ interface Listener {
 
 /** Unix: lsof structured output. execFile (no shell), output parsed in JS. */
 async function unixListeners(): Promise<Listener[]> {
-  const { stdout } = await run('lsof', ['-iTCP', '-sTCP:LISTEN', '-P', '-n'], {
-    timeout: 10_000,
-  });
+  let stdout: string;
+  try {
+    ({ stdout } = await run('lsof', ['-iTCP', '-sTCP:LISTEN', '-P', '-n'], {
+      timeout: 10_000,
+    }));
+  } catch (error: any) {
+    // lsof exits 1 when NOTHING matches (e.g. a CI runner whose user owns no
+    // listening sockets). That's an empty result, not a failure.
+    if (error?.code === 1 && !String(error?.stdout ?? '').trim()) return [];
+    throw error;
+  }
   const out: Listener[] = [];
   for (const line of stdout.split('\n').slice(1)) {
     const cols = line.trim().split(/\s+/);
