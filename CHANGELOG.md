@@ -61,6 +61,25 @@ hand-written parser — no eval), `base` (hex/dec/bin/oct), `semver`, `cron`
   `epoch`/`date` output an `iso` ISO-8601 UTC field; a typoed command says
   `Unknown command: X. Did you mean "Y"?` instead of yargs' "Unknown argument".
 
+### Security — guardrails (always on, no bypass flags)
+
+- **Sensitive-path refusal**: `lines`/`json`/`schema`/`diff`/`freq`/`regex -f`
+  refuse to return content from credential locations (`~/.ssh`, `~/.aws`,
+  `.env*`, `*.pem`, `id_rsa*`, `.npmrc`, …) → `SensitivePath`, exit 2.
+- **Clipboard secret redaction**: `clip` read withholds secret-shaped content
+  (private-key blocks, JWTs, AWS/GitHub/Slack/Google/npm/`sk-` tokens).
+- **Env value scanning**: `env` redacts by name pattern AND value shape — an
+  innocently named variable holding a token is still redacted.
+- **Cloud-metadata block**: `http` and `wait -u` refuse 169.254.169.254,
+  `metadata.google.internal`, and friends → `BlockedTarget` (SSRF guardrail);
+  `http` redacts `set-cookie` response headers.
+- **PID floor**: `kill` refuses PIDs ≤ 1 on top of the numeric check.
+- New CodeQL workflow (security-extended queries, weekly schedule); Snyk and
+  Socket badges in the README; SECURITY.md gained a full guardrail table.
+- New test layers: guardrail tests + a black-box sweep that invokes every
+  command in the manifest three ways (bare/--help/garbage flag) and asserts
+  the JSON-envelope + exit-code contract (123 tests total).
+
 ### Security
 
 - Added `SECURITY.md` (threat model, guarantees, reporting policy) — shipped

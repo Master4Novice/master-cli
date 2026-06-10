@@ -1,4 +1,5 @@
 import { withJsonFlag, emit, fail } from '../utility/io';
+import { scanSecrets } from '../utility/guard';
 
 /**
  * Env vars whose VALUES must never reach stdout un-redacted — agents paste
@@ -13,7 +14,8 @@ const redact = (value: string): string =>
     ? '••••'
     : `${value.slice(0, 3)}…${value.slice(-2)} (${value.length} chars, redacted)`;
 
-const looksSecret = (name: string): boolean => SECRET_PATTERN.test(name);
+const looksSecret = (name: string, value: string): boolean =>
+  SECRET_PATTERN.test(name) || scanSecrets(value) !== null;
 
 const command = 'env [names...]';
 const describe = 'Inspect environment variables with automatic secret redaction';
@@ -41,7 +43,7 @@ const handler = (argv: any) => {
     const vars = names.map((name) => {
       const raw = process.env[name];
       if (raw === undefined) return { name, set: false, value: null, redacted: false };
-      const secret = looksSecret(name);
+      const secret = looksSecret(name, raw);
       return { name, set: true, value: secret ? redact(raw) : raw, redacted: secret };
     });
     const missing = vars.filter((v) => !v.set).map((v) => v.name);
@@ -56,8 +58,8 @@ const handler = (argv: any) => {
     .sort();
   if (prefix) {
     const vars = all.map((name) => {
-      const secret = looksSecret(name);
       const raw = process.env[name] ?? '';
+      const secret = looksSecret(name, raw);
       return { name, set: true, value: secret ? redact(raw) : raw, redacted: secret };
     });
     return emit(argv, { prefix, count: vars.length, vars }, () => {

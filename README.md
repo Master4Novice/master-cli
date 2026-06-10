@@ -1,6 +1,9 @@
 # @master4n/master-cli (`mfn`)
 
 [![CI](https://github.com/Master4Novice/master-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/Master4Novice/master-cli/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Master4Novice/master-cli/actions/workflows/codeql.yml/badge.svg)](https://github.com/Master4Novice/master-cli/actions/workflows/codeql.yml)
+[![Known Vulnerabilities](https://snyk.io/test/github/Master4Novice/master-cli/badge.svg)](https://snyk.io/test/github/Master4Novice/master-cli)
+[![Socket](https://socket.dev/api/badge/npm/package/@master4n/master-cli)](https://socket.dev/npm/package/@master4n/master-cli)
 [![npm version](https://img.shields.io/npm/v/%40master4n%2Fmaster-cli)](https://www.npmjs.com/package/@master4n/master-cli)
 ![npm downloads](https://img.shields.io/npm/dm/%40master4n%2Fmaster-cli)
 ![License](https://img.shields.io/npm/l/%40master4n%2Fmaster-cli)

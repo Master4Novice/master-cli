@@ -54,6 +54,11 @@ async function killProcessById(pid: string): Promise<void> {
   if (!/^\d+$/.test(pid)) {
     throw new Error(`Refusing to kill non-numeric PID "${pid}"`);
   }
+  // PID 0 signals the whole process group; PID 1 is init/launchd. A parsing
+  // surprise must never resolve to either.
+  if (Number(pid) <= 1) {
+    throw new Error(`Refusing to kill system PID ${pid}`);
+  }
   if (isWin) {
     await run('taskkill', ['/PID', pid, '/F']);
   } else {

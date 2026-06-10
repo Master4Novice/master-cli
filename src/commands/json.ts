@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
+import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
 
 /**
  * Walk a dot/bracket path ("a.b[0].c" or "a.b.0.c") into a parsed JSON value.
@@ -59,6 +60,9 @@ const handler = async (argv: any) => {
   let raw: string;
   try {
     if (argv.file !== undefined) {
+      if (isSensitivePath(String(argv.file))) {
+        return fail(argv, 'SensitivePath', sensitivePathMessage(String(argv.file)), 2);
+      }
       raw = await readFile(String(argv.file), 'utf8');
     } else {
       raw = await readStdin();

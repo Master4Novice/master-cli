@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
+import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
 
 const command = 'freq [file]';
 const describe =
@@ -42,6 +43,9 @@ const handler = async (argv: any) => {
   let source: string;
   try {
     if (argv.file !== undefined) {
+      if (isSensitivePath(String(argv.file))) {
+        return fail(argv, 'SensitivePath', sensitivePathMessage(String(argv.file)), 2);
+      }
       text = await readFile(String(argv.file), 'utf8');
       source = `file:${argv.file}`;
     } else {

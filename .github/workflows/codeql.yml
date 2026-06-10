@@ -1,0 +1,33 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '30 2 * * 1' # weekly Monday sweep — catches newly added query packs
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: CodeQL analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3

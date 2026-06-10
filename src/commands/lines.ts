@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail } from '../utility/io';
+import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
 
 // A range cap keeps one call from dumping an entire huge file back into an
 // agent's context — the whole point of the command is reading less.
@@ -57,9 +58,13 @@ const handler = async (argv: any) => {
     );
   }
 
+  const file = String(argv.file);
+  if (isSensitivePath(file)) {
+    return fail(argv, 'SensitivePath', sensitivePathMessage(file), 2);
+  }
   let text: string;
   try {
-    text = await readFile(String(argv.file), 'utf8');
+    text = await readFile(file, 'utf8');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return fail(argv, 'ReadError', message);

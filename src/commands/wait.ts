@@ -1,6 +1,7 @@
 import { createConnection } from 'node:net';
 import { existsSync } from 'node:fs';
 import { withJsonFlag, emit, fail } from '../utility/io';
+import { isBlockedUrl, blockedUrlMessage } from '../utility/guard';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -68,6 +69,13 @@ const handler = async (argv: any) => {
     const url = String(argv.url);
     if (!/^https?:\/\//.test(url)) {
       return fail(argv, 'InvalidURL', '--url must start with http:// or https://.', 2);
+    }
+    try {
+      if (isBlockedUrl(new URL(url))) {
+        return fail(argv, 'BlockedTarget', blockedUrlMessage(url), 2);
+      }
+    } catch {
+      return fail(argv, 'InvalidURL', `"${url}" is not a valid URL.`, 2);
     }
     target = `url:${url}`;
     check = () => urlReady(url);

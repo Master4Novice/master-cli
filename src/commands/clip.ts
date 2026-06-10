@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { platform } from 'node:os';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
+import { scanSecrets } from '../utility/guard';
 
 /**
  * System clipboard, cross-platform, no shell. Read returns the text; write
@@ -87,7 +88,26 @@ const handler = async (argv: any) => {
       );
     }
     const text = await readClipboard();
-    emit(argv, { action: 'read', chars: text.length, text }, () => console.log(text));
+    // PII/secret guardrail: the clipboard often holds passwords and tokens
+    // (password managers paste through it). Secret-shaped content is redacted
+    // — there is NO bypass flag; the human can read their own clipboard.
+    const secretKind = scanSecrets(text);
+    if (secretKind) {
+      return emit(
+        argv,
+        {
+          action: 'read',
+          chars: text.length,
+          text: null,
+          redacted: true,
+          reason: `clipboard contains a ${secretKind} — content withheld (guardrail)`,
+        },
+        () => console.log(`[redacted: clipboard contains a ${secretKind}]`),
+      );
+    }
+    emit(argv, { action: 'read', chars: text.length, text, redacted: false }, () =>
+      console.log(text),
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return fail(

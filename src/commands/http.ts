@@ -1,4 +1,5 @@
 import { withJsonFlag, emit, fail } from '../utility/io';
+import { isBlockedUrl, blockedUrlMessage } from '../utility/guard';
 
 const MAX_PREVIEW = 2048;
 
@@ -31,6 +32,9 @@ const handler = async (argv: any) => {
     url = new URL(raw);
   } catch {
     return fail(argv, 'InvalidURL', `"${argv.url}" is not a valid URL.`, 2);
+  }
+  if (isBlockedUrl(url)) {
+    return fail(argv, 'BlockedTarget', blockedUrlMessage(String(url)), 2);
   }
   const timeout = Number(argv.timeout);
   if (!Number.isFinite(timeout) || timeout <= 0 || timeout > 120) {
@@ -72,9 +76,10 @@ const handler = async (argv: any) => {
     }
   }
 
+  // set-cookie carries session tokens — never hand those to an agent context.
   const responseHeaders: Record<string, string> = {};
   res.headers.forEach((v, k) => {
-    responseHeaders[k] = v;
+    responseHeaders[k] = k.toLowerCase() === 'set-cookie' ? '[redacted: session cookie]' : v;
   });
 
   emit(

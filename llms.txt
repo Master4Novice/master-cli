@@ -107,6 +107,18 @@
 - `mfn dns <hostname> [-t a|aaaa|cname|mx|txt|ns] --json` — system resolver +
   record sweep; missing record types are null, not errors.
 
+## Guardrails (always on — there are no bypass flags)
+
+- File-content commands (`lines` `json` `schema` `diff` `freq` `regex -f`) refuse
+  credential/secret paths (`~/.ssh`, `.env*`, `*.pem`, `.npmrc`, …) → `SensitivePath`, exit 2.
+- `clip` read redacts secret-shaped content (keys/JWTs/tokens) → `redacted:true`.
+- `env` redacts by name AND value shape; `dotenv` never reads values at all.
+- `http`/`wait -u` refuse cloud metadata endpoints (169.254.169.254 etc.) → `BlockedTarget`;
+  `http` redacts `set-cookie` response headers.
+- `open` allows only http(s)/existing paths; `trash` is reversible and refuses
+  root/home/cwd; `kill` validates ports and PIDs; `replace` is dry-run unless `--write`.
+- Full threat model: SECURITY.md (shipped in this package).
+
 ## Notes
 
 - Time/date powered by `@master4n/temporal-transformer` v2 (Luxon-backed, integer epochs).

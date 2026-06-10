@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail } from '../utility/io';
+import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
 
 interface Hunk {
   aStart: number;
@@ -77,6 +78,11 @@ const builder = (yargs: any) =>
     .example('mfn diff a.txt b.txt -s --json', 'just how much changed, and where');
 
 const handler = async (argv: any) => {
+  for (const f of [argv.fileA, argv.fileB]) {
+    if (isSensitivePath(String(f))) {
+      return fail(argv, 'SensitivePath', sensitivePathMessage(String(f)), 2);
+    }
+  }
   let aText: string;
   let bText: string;
   try {
