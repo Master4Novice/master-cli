@@ -46,6 +46,7 @@ import {
 } from './commands';
 import { CommandBuilder } from './utility';
 import { failEnvelope } from './utility/io';
+import { improveUnknownCommandMessage } from './utility/suggest';
 import type { CliCommand } from './interface';
 import pkg from '../package.json';
 
@@ -137,6 +138,10 @@ instance
     // A handler that threw (err set) is a runtime failure (exit 1); a parser
     // problem (msg set) is a usage error (exit 2).
     if (err) failEnvelope('CommandError', err.message || String(err), 1);
-    failEnvelope('UsageError', msg || 'Invalid command invocation.', 2);
+    failEnvelope(
+      'UsageError',
+      improveUnknownCommandMessage(msg || 'Invalid command invocation.'),
+      2,
+    );
   })
   .parse();

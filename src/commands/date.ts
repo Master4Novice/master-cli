@@ -53,6 +53,7 @@ function runDate(argv: DateArgs): void {
     {
       epochInSeconds: Math.floor(epochMs / 1000),
       epochInMilliseconds: epochMs,
+      iso: new Date(epochMs).toISOString(),
       utc,
       zoned,
       timezone: targetTz,

@@ -17,11 +17,20 @@ function epochToDate(argv: any, value: number): void {
     const code = error instanceof Error ? error.name : 'InvalidEpoch';
     return fail(argv, code, message, 2); // bad input → usage error
   }
+  // ISO-8601 UTC — the form agents most often need to pass onward.
+  const MS_FACTOR: Record<string, number> = {
+    seconds: 1000,
+    milliseconds: 1,
+    microseconds: 1e-3,
+    nanoseconds: 1e-6,
+  };
+  const factor = MS_FACTOR[result.epochUnit] ?? 1;
   emit(
     argv,
     {
       epoch: result.epoch,
       unit: result.epochUnit,
+      iso: new Date(Math.round(result.epoch * factor)).toISOString(),
       utc: result.dateTimeInGMT,
       local: result.dateTime,
       timezone: result.timezone,
@@ -64,6 +73,7 @@ function dateToEpoch(argv: any, input: string, format?: string, tz?: string): vo
     {
       epochInSeconds: result.epochInSeconds,
       epochInMilliseconds: result.epochInMilliseconds,
+      iso: new Date(result.epochInMilliseconds).toISOString(),
       utc: result.dateTimeInGMT,
       local: result.dateTime,
       timezone: result.timezone,

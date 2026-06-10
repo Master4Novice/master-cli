@@ -32,9 +32,25 @@ const handler = async (argv: any) => {
       bytes = (await stat(file)).size;
       source = `file:${file}`;
     } else if (argv.text !== undefined) {
-      text = String(argv.text);
-      bytes = Buffer.byteLength(text, 'utf8');
-      source = 'text';
+      const positional = String(argv.text);
+      // Footgun guard (found in blind agent review): `mfn count ./some/file`
+      // would silently measure the PATH STRING, not the file — a plausible
+      // wrong answer. If the positional names an existing file, count the file.
+      let isFile = false;
+      try {
+        isFile = (await stat(positional)).isFile();
+      } catch {
+        isFile = false;
+      }
+      if (isFile) {
+        text = await readFile(positional, 'utf8');
+        bytes = (await stat(positional)).size;
+        source = `file:${positional}`;
+      } else {
+        text = positional;
+        bytes = Buffer.byteLength(text, 'utf8');
+        source = 'text';
+      }
     } else {
       text = await readStdin();
       if (!text) {

@@ -45,6 +45,11 @@ hand-written parser — no eval), `base` (hex/dec/bin/oct), `semver`, `cron`
 
 - **`kill -p <bad-port>` now follows the exit-code contract** — `InvalidPort`/
   exit 2 (usage) instead of `CommandError`/exit 1; ports range-checked (1..65535).
+- Blind-agent review findings (an independent agent evaluated the CLI cold and
+  scored 9/10 — its three asks, all shipped): `count <path>` now counts the
+  FILE when the positional names one (was: silently measured the path string);
+  `epoch`/`date` output an `iso` ISO-8601 UTC field; a typoed command says
+  `Unknown command: X. Did you mean "Y"?` instead of yargs' "Unknown argument".
 
 ### Security
 

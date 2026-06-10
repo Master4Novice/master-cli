@@ -30,3 +30,28 @@ describe('contract: stdout is one JSON object, with stable exit codes', () => {
     expect(r.json.ok).toBe(false);
   });
 });
+
+describe('blind-review fixes', () => {
+  it('a typoed command gets "Unknown command" + a did-you-mean suggestion', () => {
+    const r = run('semvr', '--json');
+    expect(r.code).toBe(2);
+    expect(r.json.message).toContain('Unknown command: semvr');
+    expect(r.json.message).toContain('Did you mean "semver"?');
+  });
+
+  it('count with a positional file path counts the FILE, not the path string', () => {
+    const r = run('count', 'package.json', '--json');
+    expect(r.json.source).toBe('file:package.json');
+    expect(r.json.lines).toBeGreaterThan(10);
+  });
+
+  it('epoch output includes an ISO-8601 UTC field', () => {
+    const r = run('epoch', '1622547800', '--json');
+    expect(r.json.iso).toBe('2021-06-01T11:43:20.000Z');
+  });
+
+  it('date output includes an ISO-8601 UTC field', () => {
+    const r = run('date', '2024-07-04T15:30:30Z', '--json');
+    expect(r.json.iso).toBe('2024-07-04T15:30:30.000Z');
+  });
+});
