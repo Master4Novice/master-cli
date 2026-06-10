@@ -43,15 +43,32 @@ function trashLinux(abs: string): string {
   return dest;
 }
 
-/** Windows: real Recycle Bin via the VisualBasic FileSystem API. */
+/**
+ * Windows: real Recycle Bin via the VisualBasic FileSystem API. The path goes
+ * in via an ENVIRONMENT VARIABLE — `powershell -Command <script> <arg>`
+ * appends trailing args to the command TEXT (they are not $args), which both
+ * breaks and re-parses the path. Env values are data, never parsed.
+ * $ErrorActionPreference=Stop makes failures terminate with a real exit code
+ * (PowerShell's default non-terminating errors exit 0 — "success" that did
+ * nothing, caught on CI).
+ */
 async function trashWindows(abs: string): Promise<string> {
   const script =
+    "$ErrorActionPreference='Stop';" +
     'Add-Type -AssemblyName Microsoft.VisualBasic;' +
-    'if (Test-Path -LiteralPath $args[0] -PathType Container) {' +
-    '[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($args[0],"OnlyErrorDialogs","SendToRecycleBin")' +
+    '$p=$env:MFN_TRASH_PATH;' +
+    'if (Test-Path -LiteralPath $p -PathType Container) {' +
+    '[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($p,"OnlyErrorDialogs","SendToRecycleBin")' +
     '} else {' +
-    '[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($args[0],"OnlyErrorDialogs","SendToRecycleBin")}';
-  await run('powershell', ['-NoProfile', '-Command', script, abs], { timeout: 15_000 });
+    '[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($p,"OnlyErrorDialogs","SendToRecycleBin")}';
+  await run('powershell', ['-NoProfile', '-Command', script], {
+    timeout: 15_000,
+    env: { ...process.env, MFN_TRASH_PATH: abs },
+  });
+  // Belt and braces: a clean exit code is not proof — verify the move happened.
+  if (fs.existsSync(abs)) {
+    throw new Error('Recycle Bin reported success but the path still exists');
+  }
   return 'Recycle Bin';
 }
 

@@ -19,16 +19,19 @@ async function send(title: string, message: string): Promise<void> {
     const script = `display notification "${escapeAppleScript(message)}" with title "${escapeAppleScript(title)}"`;
     await run('osascript', ['-e', script], { timeout: 5000 });
   } else if (os === 'win32') {
-    // PowerShell toast via the WinRT API; title/message are passed as
-    // positional args so they never get re-parsed as script.
+    // PowerShell toast via the WinRT API. Title/message arrive as ENVIRONMENT
+    // VARIABLES — `-Command <script> <arg>` appends args to the command text
+    // (they are NOT $args), so env is the only way to pass data unparsed.
     const script =
+      "$ErrorActionPreference='Stop';" +
       '[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null;' +
       '$t=[Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02);' +
-      '$n=$t.GetElementsByTagName("text");$n.Item(0).AppendChild($t.CreateTextNode($args[0]))|Out-Null;' +
-      '$n.Item(1).AppendChild($t.CreateTextNode($args[1]))|Out-Null;' +
+      '$n=$t.GetElementsByTagName("text");$n.Item(0).AppendChild($t.CreateTextNode($env:MFN_NOTIFY_TITLE))|Out-Null;' +
+      '$n.Item(1).AppendChild($t.CreateTextNode($env:MFN_NOTIFY_MESSAGE))|Out-Null;' +
       '[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("mfn").Show([Windows.UI.Notifications.ToastNotification]::new($t))';
-    await run('powershell', ['-NoProfile', '-Command', script, title, message], {
+    await run('powershell', ['-NoProfile', '-Command', script], {
       timeout: 10_000,
+      env: { ...process.env, MFN_NOTIFY_TITLE: title, MFN_NOTIFY_MESSAGE: message },
     });
   } else {
     await run('notify-send', [title, message], { timeout: 5000 });
