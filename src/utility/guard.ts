@@ -96,12 +96,43 @@ export function scanSecrets(text: string): string | null {
 export function redactSecrets(text: string): { text: string; redactedCount: number } {
   let redactedCount = 0;
   let out = text;
+
+  // 1. Whole PEM blocks (BEGIN…END) when the full block is present in one chunk
+  //    (e.g. `mfn lines key.pem` joins all lines before redacting).
+  out = out.replace(
+    /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g,
+    () => {
+      redactedCount++;
+      return '[redacted: private key block]';
+    },
+  );
+
+  // 2. Inline token shapes (JWT, AWS/GitHub/Slack/Google/npm/sk-… keys).
   for (const [re, kind] of SECRET_PATTERNS) {
     out = out.replace(new RegExp(re, 'g'), () => {
       redactedCount++;
       return `[redacted: ${kind}]`;
     });
   }
+
+  // 3. Line pass for line-oriented callers (e.g. `mfn freq`, which hands us one
+  //    line at a time, so a PEM BODY line never matches the block rule above).
+  //    A line whose entire trimmed content is a long unbroken base64/hex run is
+  //    key material or an opaque token — never something an agent reasons about.
+  out = out
+    .split('\n')
+    .map((line) => {
+      const t = line.trim();
+      // Pure base64 / base64url / hex run of 40+ chars on its own line: key
+      // material or an opaque token, never prose an agent reasons about.
+      if (t.length >= 40 && /^[A-Za-z0-9+/_-]+={0,2}$/.test(t) && !t.includes(' ')) {
+        redactedCount++;
+        return line.replace(t, '[redacted: key material]');
+      }
+      return line;
+    })
+    .join('\n');
+
   return { text: out, redactedCount };
 }
 

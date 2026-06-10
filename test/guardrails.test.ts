@@ -68,6 +68,20 @@ describe('sensitive-path bypass closures (from adversarial review)', () => {
     expect(out).toContain('[redacted: JWT]');
   });
 
+  it('a private key BODY piped line-by-line is masked, not just the BEGIN marker', () => {
+    const body = 'MIIEowIBAAKCAQEA' + 'a'.repeat(60); // pure base64-ish key line
+    const pem = `-----BEGIN RSA PRIVATE KEY-----\n${body}\n-----END RSA PRIVATE KEY-----\n`;
+    const out = execFileSync('node', [BIN, 'freq', '--json'], { encoding: 'utf8', input: pem });
+    expect(out).not.toContain(body);
+    expect(out).toContain('[redacted');
+  });
+
+  it('does not over-redact ordinary code/prose lines', () => {
+    const code = 'const userName = getActiveUserFromSession(req);\nreturn userName.trim();\n';
+    const out = execFileSync('node', [BIN, 'freq', '--json'], { encoding: 'utf8', input: code });
+    expect(out).not.toContain('redacted');
+  });
+
   it('json value that is a secret comes back masked', () => {
     const dir = fixtureDir();
     writeFileSync(join(dir, 'cfg.json'), JSON.stringify({ token: FAKE_JWT, name: 'ok' }));
