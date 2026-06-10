@@ -1,6 +1,7 @@
 import { CLASSIC_COMMANDS } from './catalog.classic';
 import { AGENT_COMMANDS } from './catalog.agent';
 import { POWER_COMMANDS } from './catalog.power';
+import { OS_COMMANDS } from './catalog.os';
 
 /**
  * Single source of truth for the command catalogue — consumed by the welcome
@@ -22,6 +23,7 @@ export const COMMANDS: readonly CommandInfo[] = [
   ...CLASSIC_COMMANDS,
   ...AGENT_COMMANDS,
   ...POWER_COMMANDS,
+  ...OS_COMMANDS,
 ] as const;
 
 /** Distinct categories in catalogue order (for grouped rendering). */

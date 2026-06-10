@@ -41,6 +41,13 @@ import wait from './wait';
 import ports from './ports';
 import http from './http';
 import base from './base';
+import clip from './clip';
+import notify from './notify';
+import openCmd from './open';
+import procs from './procs';
+import disk from './disk';
+import trash from './trash';
+import dns from './dns';
 
 export {
   cts,
@@ -86,4 +93,11 @@ export {
   ports,
   http,
   base,
+  clip,
+  notify,
+  openCmd,
+  procs,
+  disk,
+  trash,
+  dns,
 };

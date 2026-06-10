@@ -1,8 +1,9 @@
 # @master4n/master-cli (`mfn`)
 
-> 43 headless, JSON-first commands for AI agents and developers: extract instead
-> of dump (token savers), compute instead of guess (hallucination killers), and
-> one-call system/code/network facts. Every command behaves identically for a
+> 50 headless, JSON-first commands for AI agents and developers: extract instead
+> of dump (token savers), compute instead of guess (hallucination killers),
+> one-call system/code/network facts, and cross-platform OS actions (clipboard,
+> notifications, trash, processes). Every command behaves identically for a
 > human at a terminal and an agent reading stdout.
 
 ## Agent contract (read this first)
@@ -88,6 +89,23 @@
 - `mfn sc [pattern] [--depth] [--limit] --json` — fuzzy file find under cwd.
 - `mfn cts [--type text|svg|png|jpeg] --json` — directory tree.
 - `mfn update [package] --json` — global npm update of the CLI (or named package).
+
+## OS-level (cross-platform: macOS / Windows / Linux)
+
+- `mfn clip [text] [-r] --json` — read/write the system clipboard. Write via arg or
+  stdin (`git diff | mfn clip`); read returns `{chars, text}`. Headless sessions fail
+  cleanly with `ClipboardUnavailable`.
+- `mfn notify <message> [-t title] --json` — desktop notification (osascript /
+  notify-send / WinRT toast). Ping the user when a long task finishes.
+- `mfn open <target> --json` — open an http(s) URL or existing file in the default
+  app/browser. Non-http schemes and missing paths are rejected (exit 2).
+- `mfn procs [pattern] [-t top] --json` — search processes by name: pid/cpu/memMB,
+  sorted by cpu. One call instead of ps|grep (or tasklist parsing).
+- `mfn disk [-a] --json` — per-mount totals/free/used% (df -kP / Win32_LogicalDisk).
+- `mfn trash <paths...> --json` — move to the OS trash (reversible; ~/.Trash, XDG
+  spec, Recycle Bin). Refuses root/home/cwd and parents of cwd. Use instead of rm.
+- `mfn dns <hostname> [-t a|aaaa|cname|mx|txt|ns] --json` — system resolver +
+  record sweep; missing record types are null, not errors.
 
 ## Notes
 

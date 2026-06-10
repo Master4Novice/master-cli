@@ -60,9 +60,21 @@ mfn -v                 # version
 mfn capabilities --json   # machine-readable manifest of all commands
 ```
 
-## Commands (43)
+## Commands (50)
 
 Run `mfn capabilities` for the grouped list, `mfn <command> --help` for flags.
+
+### OS-level — one call on macOS, Windows, and Linux
+
+| Command | What it does | Example |
+| ------- | ------------ | ------- |
+| `clip` | Read/write the system clipboard | `git diff \| mfn clip --json` |
+| `notify` | Desktop notification — ping the user when a task finishes | `mfn notify "build finished" --json` |
+| `open` | Open a file/URL in the default app (validated first) | `mfn open coverage/index.html --json` |
+| `procs` | Search processes by name: pid/cpu/mem | `mfn procs node --json` |
+| `disk` | Per-mount disk usage without df parsing | `mfn disk --json` |
+| `trash` | **Reversible** delete to the OS trash — never `rm -rf` | `mfn trash old-logs --json` |
+| `dns` | A/AAAA/CNAME/MX/TXT/NS in one call | `mfn dns github.com --json` |
 
 ### Token savers — read less, extract exactly
 

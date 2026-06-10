@@ -43,6 +43,13 @@ import {
   ports,
   http,
   base,
+  clip,
+  notify,
+  openCmd,
+  procs,
+  disk,
+  trash,
+  dns,
 } from './commands';
 import { CommandBuilder } from './utility';
 import { failEnvelope } from './utility/io';
@@ -102,6 +109,14 @@ add(env);
 add(size);
 add(ext);
 add(ip);
+/**OS-level (cross-platform: macOS / Windows / Linux) */
+add(clip);
+add(notify);
+add(openCmd);
+add(procs);
+add(disk);
+add(trash);
+add(dns);
 /**Maintenance */
 add(update);
 

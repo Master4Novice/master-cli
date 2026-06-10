@@ -4,12 +4,22 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.3] — 2026-06-10
+## [3.0.3] — 2026-06-11
 
-The agent release: 30 new commands (13 → 43), ~6× faster startup, real quality
+The agent release: 37 new commands (13 → 50), ~6× faster startup, real quality
 gates, security hardening, and category-grouped discovery.
 
-### Added — 30 new commands
+### Added — 7 OS-level commands (cross-platform: macOS / Windows / Linux)
+
+`clip` (clipboard read/write via pbcopy/xclip/wl-clipboard/clip.exe), `notify`
+(desktop notification: osascript / notify-send / WinRT toast), `open` (default
+app/browser; http(s)-or-existing-path validation, non-http schemes refused),
+`procs` (process search: pid/cpu/mem), `disk` (per-mount usage), `trash`
+(reversible delete to ~/.Trash / XDG trash / Recycle Bin — refuses root, home,
+cwd, and parents of cwd, compared by realpath), `dns` (A/AAAA/CNAME/MX/TXT/NS
+sweep via Node's resolver).
+
+### Added — 30 agent commands
 
 **Token savers** (extract instead of dump): `json` (path query), `schema`
 (JSON shape inference), `count` (+ LLM token estimate), `lines` (exact ranges),
@@ -56,6 +66,10 @@ hand-written parser — no eval), `base` (hex/dec/bin/oct), `semver`, `cron`
 - Added `SECURITY.md` (threat model, guarantees, reporting policy) — shipped
   inside the npm package.
 - `kill` refuses non-numeric PIDs parsed from `lsof`/`netstat` output.
+- `trash` guards against catastrophe by realpath (the macOS `/var` →
+  `/private/var` symlink defeated string comparison — caught by the suite);
+  `open` refuses `javascript:`/`file:`/custom schemes; `clip` writes via stdin
+  so content never appears in `ps` output or shell history.
 - `env` redacts secret-looking values unconditionally (no off switch);
   `dotenv` never reads values at all; `have` validates tool names against a
   strict charset before probing.
