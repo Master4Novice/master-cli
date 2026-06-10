@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
-import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
+import { isSensitivePath, sensitivePathMessage, redactSecrets } from '../utility/guard';
 
 const MAX_PATTERN = 1000;
 const MAX_MATCHES = 1000;
@@ -73,7 +73,12 @@ const handler = async (argv: any) => {
       break;
     }
     const line = text.slice(0, m.index).split('\n').length;
-    matches.push({ match: m[0], index: m.index, line, groups: m.slice(1) });
+    matches.push({
+      match: redactSecrets(m[0]).text,
+      index: m.index,
+      line,
+      groups: m.slice(1).map((g) => (g === undefined ? g : redactSecrets(g).text)),
+    });
     if (m[0] === '') break; // zero-length match — avoid pathological loops
   }
 

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail } from '../utility/io';
-import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
+import { isSensitivePath, sensitivePathMessage, redactSecrets } from '../utility/guard';
 
 // A range cap keeps one call from dumping an entire huge file back into an
 // agent's context — the whole point of the command is reading less.
@@ -82,7 +82,9 @@ const handler = async (argv: any) => {
     );
   }
   const effectiveEnd = Math.min(end, totalLines);
-  const slice = all.slice(start - 1, effectiveEnd);
+  // Content backstop: even a non-sensitive path can hold a committed token —
+  // mask secret-shaped substrings before echoing them into a context window.
+  const slice = all.slice(start - 1, effectiveEnd).map((line) => redactSecrets(line).text);
 
   emit(
     argv,

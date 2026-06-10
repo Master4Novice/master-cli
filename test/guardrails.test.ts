@@ -46,6 +46,45 @@ describe('sensitive-path refusal (content never reaches an agent)', () => {
   });
 });
 
+describe('sensitive-path bypass closures (from adversarial review)', () => {
+  it('a symlink with an innocent name to a sensitive file is still refused', () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, '.env'), 'FAKE_SECRET=leakme123');
+    // notes.txt → .env ; the basename is innocent, the realpath is not.
+    execFileSync('ln', ['-s', join(dir, '.env'), join(dir, 'notes.txt')]);
+    const r = runIn(dir, 'lines', 'notes.txt', '--json');
+    expect(r.code).toBe(2);
+    expect(r.json.error).toBe('SensitivePath');
+    expect(r.stdout).not.toContain('leakme123');
+  });
+
+  it('secret-shaped content piped via stdin is masked, not echoed', () => {
+    // `cat .env | mfn freq` — no path to vet, so the content backstop applies.
+    const out = execFileSync('node', [BIN, 'freq', '--json'], {
+      encoding: 'utf8',
+      input: `API_TOKEN=${FAKE_JWT}\nAPI_TOKEN=${FAKE_JWT}\nnormal line\n`,
+    });
+    expect(out).not.toContain(FAKE_JWT);
+    expect(out).toContain('[redacted: JWT]');
+  });
+
+  it('json value that is a secret comes back masked', () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, 'cfg.json'), JSON.stringify({ token: FAKE_JWT, name: 'ok' }));
+    const r = runIn(dir, 'json', 'token', '-f', 'cfg.json', '--json');
+    expect(r.stdout).not.toContain(FAKE_JWT);
+    expect(r.json.value).toContain('[redacted');
+  });
+
+  it('lines masks a secret embedded in an otherwise-normal file', () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, 'config.ts'), `const KEY = "${FAKE_JWT}";\nexport default KEY;\n`);
+    const r = runIn(dir, 'lines', 'config.ts', '--json');
+    expect(r.stdout).not.toContain(FAKE_JWT);
+    expect(r.json.content).toContain('[redacted');
+  });
+});
+
 describe('network guardrails', () => {
   it('http refuses the AWS metadata endpoint without making a request', () => {
     const r = run('http', 'http://169.254.169.254/latest/meta-data/', '--json');

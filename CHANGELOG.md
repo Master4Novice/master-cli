@@ -78,7 +78,14 @@ hand-written parser — no eval), `base` (hex/dec/bin/oct), `semver`, `cron`
   Socket badges in the README; SECURITY.md gained a full guardrail table.
 - New test layers: guardrail tests + a black-box sweep that invokes every
   command in the manifest three ways (bare/--help/garbage flag) and asserts
-  the JSON-envelope + exit-code contract (123 tests total).
+  the JSON-envelope + exit-code contract.
+- **Two bypasses closed (found by an adversarial blind review):** the path
+  guard now resolves symlinks via realpath (an innocently named symlink to a
+  credential file is refused), and a content backstop masks secret-shaped
+  substrings — private keys, JWTs, cloud tokens — in what `lines`/`freq`/
+  `regex`/`json` echo, **including stdin** (`cat .env | mfn freq`) where there
+  is no path to vet. SECURITY.md documents the remaining limits honestly
+  (hardlinks, shape-based matching). 127 tests total.
 
 ### Security
 

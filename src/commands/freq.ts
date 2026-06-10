@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
-import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
+import { isSensitivePath, sensitivePathMessage, redactSecrets } from '../utility/guard';
 
 const command = 'freq [file]';
 const describe =
@@ -71,7 +71,9 @@ const handler = async (argv: any) => {
     .filter(([, c]) => c >= min)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, top)
-    .map(([line, count]) => ({ count, line }));
+    // Content backstop: stdin (`cat .env | mfn freq`) has no path to vet, so
+    // mask secret-shaped substrings in the lines we echo back.
+    .map(([line, count]) => ({ count, line: redactSecrets(line).text }));
 
   emit(
     argv,

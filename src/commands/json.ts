@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
-import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
+import { isSensitivePath, sensitivePathMessage, redactSecrets } from '../utility/guard';
 
 /**
  * Walk a dot/bracket path ("a.b[0].c" or "a.b.0.c") into a parsed JSON value.
@@ -123,8 +123,10 @@ const handler = async (argv: any) => {
     return emit(argv, { query: query || null, type, length }, () => console.log(length));
   }
 
-  emit(argv, { query: query || null, type, value }, () =>
-    console.log(typeof value === 'string' ? value : JSON.stringify(value, null, 2)),
+  // Content backstop: a JSON file can hold a token at the queried path.
+  const safeValue = typeof value === 'string' ? redactSecrets(value).text : value;
+  emit(argv, { query: query || null, type, value: safeValue }, () =>
+    console.log(typeof safeValue === 'string' ? safeValue : JSON.stringify(safeValue, null, 2)),
   );
 };
 

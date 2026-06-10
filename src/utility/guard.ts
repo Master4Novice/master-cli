@@ -14,6 +14,7 @@
  * There are intentionally NO bypass flags. See SECURITY.md.
  */
 import path from 'node:path';
+import fs from 'node:fs';
 
 const SENSITIVE_SEGMENTS = ['.ssh', '.gnupg', '.aws', '.kube', '.docker', '.gcloud', '.azure'];
 
@@ -33,14 +34,31 @@ const SENSITIVE_PATTERNS = [
   /^\.env(\..+)?$/i, // .env, .env.local, … — `mfn dotenv` is the safe reader
 ];
 
-/** True when reading this file's CONTENT would expose credentials/keys/PII. */
-export function isSensitivePath(p: string): boolean {
+/** Does this exact path string match a sensitive segment/basename/pattern? */
+function matchesSensitive(p: string): boolean {
   const abs = path.resolve(p);
   const segments = abs.split(path.sep).filter(Boolean);
   const base = path.basename(abs);
   if (segments.some((s) => SENSITIVE_SEGMENTS.includes(s.toLowerCase()))) return true;
   if (SENSITIVE_BASENAMES.includes(base.toLowerCase())) return true;
   return SENSITIVE_PATTERNS.some((re) => re.test(base));
+}
+
+/**
+ * True when reading this file's CONTENT would expose credentials/keys/PII.
+ * Checks the literal path AND the resolved realpath, so an innocently named
+ * symlink ("notes.txt" → "~/.ssh/id_rsa") can't smuggle a secret past the
+ * basename check (found by an adversarial review).
+ */
+export function isSensitivePath(p: string): boolean {
+  if (matchesSensitive(p)) return true;
+  try {
+    const real = fs.realpathSync(p);
+    if (real !== path.resolve(p) && matchesSensitive(real)) return true;
+  } catch {
+    /* path doesn't exist / not resolvable — the literal check above stands */
+  }
+  return false;
 }
 
 /** Standard refusal message for a sensitive path (stable error: SensitivePath). */
@@ -66,6 +84,25 @@ export function scanSecrets(text: string): string | null {
     if (re.test(text)) return kind;
   }
   return null;
+}
+
+/**
+ * Mask secret-shaped substrings inside text that a command echoes back. This
+ * is the content-level backstop to isSensitivePath's path-level check: even
+ * when a secret arrives via stdin (`cat .env | mfn freq`) — where there is no
+ * path to vet — a JWT/private key/cloud token is replaced before it reaches
+ * stdout. Returns the (possibly) masked text and how many tokens were masked.
+ */
+export function redactSecrets(text: string): { text: string; redactedCount: number } {
+  let redactedCount = 0;
+  let out = text;
+  for (const [re, kind] of SECRET_PATTERNS) {
+    out = out.replace(new RegExp(re, 'g'), () => {
+      redactedCount++;
+      return `[redacted: ${kind}]`;
+    });
+  }
+  return { text: out, redactedCount };
 }
 
 /**

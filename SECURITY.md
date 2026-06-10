@@ -51,6 +51,31 @@ use any flag that exists:
 | **Dry-run by default** | `replace` | File modification requires explicit `--write`; scope is bounded to cwd. |
 | **Body/range caps everywhere** | `http` (2KB preview) `lines` (2000) `diff` (20k lines) `clip` (1MB) … | One call can never flood a context window or memory. |
 
+## Guardrail scope & known limits (honest)
+
+The credential guardrail is **defense-in-depth, not a security boundary**. It is
+two layers:
+
+1. **Path layer** — refuses sensitive paths, resolving symlinks via realpath so
+   an innocently named symlink can't smuggle a secret file's content out.
+2. **Content layer** — masks secret-*shaped* substrings (private-key blocks,
+   JWTs, AWS/GitHub/Slack/Google/npm/`sk-` tokens) in the content that
+   `lines`/`freq`/`regex`/`json` echo, **including content piped via stdin**
+   where there is no path to vet.
+
+Known limits, stated plainly:
+
+- **Hardlinks** to a sensitive file are not detected at the path layer (a
+  hardlink shares the file's inode but has no distinguishable path). The content
+  layer still masks recognised token shapes; and creating a hardlink requires
+  the same read access as reading the original, so it grants no new capability.
+- The content layer matches **known token shapes**, not arbitrary `KEY=value`
+  secrets — over-broad redaction would break legitimate config/log processing.
+- An agent that already has shell access can read any file directly with `cat`.
+  These guardrails reduce *accidental* exposure through `mfn`'s own output
+  (the common path by which secrets leak into an agent's context window); they
+  are not a sandbox and do not claim to be.
+
 ## Scope notes
 
 - `mfn hash` supports `md5`/`sha1` for checksum interop with legacy systems —
