@@ -1,4 +1,3 @@
-import ora from 'ora';
 import chalk from 'chalk';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -38,7 +37,8 @@ const builder = (yargs: any) =>
 
 const handler = async (argv: any) => {
   const pkg = String(argv.package ?? '@master4n/master-cli');
-  const spinner = canPrompt(argv) ? ora() : null;
+  // ora is TTY-only eye candy — lazy import keeps headless invocations fast.
+  const spinner = canPrompt(argv) ? (await import('ora')).default() : null;
   const startedAt = Date.now();
 
   spinner?.start(chalk.green(`updating/installing ${pkg}`));
@@ -50,9 +50,7 @@ const handler = async (argv: any) => {
       `${chalk.green(`updated ${pkg}`)} ${chalk.dim(`(${(durationMs / 1000).toFixed(3)}s)`)}`,
     );
     emit(argv, { package: pkg, version, durationMs }, () => {
-      logger.info(
-        `${pkg} updated/installed${version ? ` -> ${chalk.green(version)}` : ''}`,
-      );
+      logger.info(`${pkg} updated/installed${version ? ` -> ${chalk.green(version)}` : ''}`);
     });
   } catch (error) {
     spinner?.fail(chalk.red(`failed updating ${pkg}`));

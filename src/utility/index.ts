@@ -12,21 +12,13 @@ const stamp = () => new Date().toISOString();
 export function Logger() {
   return {
     info: (info: string) =>
-      console.error(
-        `${chalk.blue('INFO')} [${chalk.magenta(stamp())}] ${chalk.white(info)}`,
-      ),
+      console.error(`${chalk.blue('INFO')} [${chalk.magenta(stamp())}] ${chalk.white(info)}`),
     warn: (warn: string) =>
-      console.error(
-        `${chalk.yellow('WARN')} [${chalk.magenta(stamp())}] ${chalk.white(warn)}`,
-      ),
+      console.error(`${chalk.yellow('WARN')} [${chalk.magenta(stamp())}] ${chalk.white(warn)}`),
     error: (error: string) =>
-      console.error(
-        `${chalk.red('ERROR')} [${chalk.magenta(stamp())}] ${chalk.white(error)}`,
-      ),
+      console.error(`${chalk.red('ERROR')} [${chalk.magenta(stamp())}] ${chalk.white(error)}`),
     debug: (debug: string) =>
-      console.error(
-        `${chalk.cyan('DEBUG')} [${chalk.magenta(stamp())}] ${chalk.white(debug)}`,
-      ),
+      console.error(`${chalk.cyan('DEBUG')} [${chalk.magenta(stamp())}] ${chalk.white(debug)}`),
   };
 }
 
@@ -35,8 +27,8 @@ export function CommandBuilder(instance: any) {
     add: (
       alias: string,
       describe: string,
-      builder: object,
-      handler: (argv: any) => any,
+      builder: (yargs: any) => any,
+      handler: (argv: any) => void | Promise<void>,
     ) => {
       instance.command({
         command: alias,
@@ -69,10 +61,9 @@ export function createHiddenCacheDirectory() {
   const cacheDir = path.join(homeDir, '.mfn', 'cache');
   if (!fs.existsSync(cacheDir)) {
     try {
-      if (!fs.existsSync(path.join(homeDir, '.mfn'))) {
-        fs.mkdirSync(path.join(homeDir, '.mfn'));
-      }
-      fs.mkdirSync(cacheDir, { recursive: true });
+      // 0700: the cache records usage details (recent ports, ignore lists) —
+      // no reason for other local users to read it.
+      fs.mkdirSync(cacheDir, { recursive: true, mode: 0o700 });
     } catch {
       /* best-effort; cache is optional */
     }
@@ -108,9 +99,6 @@ export function getLatestVersion(packageName: string) {
 
 export const colorQuestions = (message: string) => chalk.green(message);
 
-export async function saveIgnoresToCache(
-  ignore: any,
-  cachePath: any,
-): Promise<void> {
+export async function saveIgnoresToCache(ignore: any, cachePath: any): Promise<void> {
   await fsExtra.writeJson(cachePath, ignore, { spaces: 2 });
 }

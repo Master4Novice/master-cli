@@ -25,10 +25,17 @@ const builder = (yargs: any) =>
     .example('mfn decode -t <jwt> --json', 'decode a JWT');
 
 const handler = (argv: any) => {
-  const token = String(argv.token).replace(/^Bearer\s+/i, '').trim();
+  const token = String(argv.token)
+    .replace(/^Bearer\s+/i, '')
+    .trim();
   const parts = token.split('.');
   if (parts.length !== 3) {
-    return fail(argv, 'InvalidJWT', 'Invalid JWT structure: expected three dot-separated segments.', 2);
+    return fail(
+      argv,
+      'InvalidJWT',
+      'Invalid JWT structure: expected three dot-separated segments.',
+      2,
+    );
   }
 
   let header: unknown;

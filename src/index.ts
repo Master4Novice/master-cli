@@ -1,13 +1,55 @@
 import instance from './instance';
 import {
-  cts, sc, deco, date, epoch, killProcess, update, capabilities,
-  id, hash, encode, random, port,
+  cts,
+  sc,
+  deco,
+  date,
+  epoch,
+  killProcess,
+  update,
+  capabilities,
+  id,
+  hash,
+  encode,
+  random,
+  port,
+  jsonCmd,
+  count,
+  lines,
+  have,
+  sys,
+  repo,
+  calc,
+  semver,
+  caseCmd,
+  cron,
+  diff,
+  env,
+  size,
+  ext,
+  freq,
+  regex,
+  url,
+  ip,
+  escapeCmd,
+  schema,
+  outlineCmd,
+  imports,
+  replace,
+  recent,
+  pkgCmd,
+  dotenv,
+  wait,
+  ports,
+  http,
+  base,
 } from './commands';
 import { CommandBuilder } from './utility';
 import { failEnvelope } from './utility/io';
+import type { CliCommand } from './interface';
 import pkg from '../package.json';
 
-const add = (c: { command: string; describe: string; builder: any; handler: any }) =>
+const add = (c: CliCommand) =>
   CommandBuilder(instance).add(c.command, c.describe, c.builder, c.handler);
 
 /**Discovery */
@@ -21,14 +63,46 @@ add(random);
 add(epoch);
 add(date);
 add(deco);
-/**OS / filesystem */
+/**Text & data extraction (token savers) */
+add(jsonCmd);
+add(schema);
+add(count);
+add(lines);
+add(diff);
+add(freq);
+add(caseCmd);
+add(escapeCmd);
+/**Exact computation (hallucination killers) */
+add(calc);
+add(semver);
+add(cron);
+add(regex);
+add(url);
+/**Code intelligence */
+add(outlineCmd);
+add(imports);
+add(replace);
+add(recent);
+add(pkgCmd);
+add(dotenv);
+add(base);
+/**OS / filesystem / network */
 add(port);
+add(ports);
 add(killProcess);
+add(wait);
+add(http);
 add(sc);
 add(cts);
+add(have);
+add(sys);
+add(repo);
+add(env);
+add(size);
+add(ext);
+add(ip);
 /**Maintenance */
 add(update);
-
 
 instance
   .usage(

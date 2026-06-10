@@ -45,10 +45,7 @@ function listening(port: number, host: string): Promise<boolean> {
  * bound only to a specific non-loopback interface is out of scope.
  */
 async function isFree(port: number): Promise<boolean> {
-  const [v4, v6] = await Promise.all([
-    listening(port, '127.0.0.1'),
-    listening(port, '::1'),
-  ]);
+  const [v4, v6] = await Promise.all([listening(port, '127.0.0.1'), listening(port, '::1')]);
   return !v4 && !v6;
 }
 
@@ -57,8 +54,17 @@ const describe = 'Find a free port, or check whether a specific port is availabl
 
 const builder = (yargs: any) =>
   withJsonFlag(yargs)
-    .option('check', { alias: 'c', describe: 'Check if this specific port is free', type: 'number' })
-    .option('count', { alias: 'n', describe: 'Return this many distinct free ports', type: 'number', default: 1 })
+    .option('check', {
+      alias: 'c',
+      describe: 'Check if this specific port is free',
+      type: 'number',
+    })
+    .option('count', {
+      alias: 'n',
+      describe: 'Return this many distinct free ports',
+      type: 'number',
+      default: 1,
+    })
     .example('mfn port --json', 'one free port')
     .example('mfn port -n 3 --json', 'three free ports')
     .example('mfn port -c 3000 --json', 'is port 3000 free?');
@@ -100,9 +106,7 @@ const handler = async (argv: any) => {
   // Stable shape regardless of count: always { count, ports }, plus `port` as a
   // convenience alias for the first — so an agent requesting N=1 sees the same
   // keys as N>1.
-  emit(argv, { count, ports, port: ports[0] }, () =>
-    ports.forEach((p) => console.log(p)),
-  );
+  emit(argv, { count, ports, port: ports[0] }, () => ports.forEach((p) => console.log(p)));
 };
 
 /** Open a listener on an OS-chosen free port and keep it open (caller closes). */

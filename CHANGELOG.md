@@ -4,6 +4,88 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.3] — 2026-06-10
+
+The agent release: 30 new commands (13 → 43), ~6× faster startup, real quality
+gates, security hardening, and category-grouped discovery.
+
+### Added — 30 new commands
+
+**Token savers** (extract instead of dump): `json` (path query), `schema`
+(JSON shape inference), `count` (+ LLM token estimate), `lines` (exact ranges),
+`outline` (symbols + line numbers), `diff` (structured hunks), `freq` (top
+repeated lines), `imports` (import graph / reverse lookup), `repo` (one-shot git
+summary), `sys`, `have`, `ip`, `size`, `ext`, `recent`, `ports` (all listeners),
+`pkg` (declared vs installed), `env` (secrets always redacted), `dotenv`
+(.env completeness; values never read).
+
+**Exact computation** (hallucination killers): `calc` (BigInt-exact arithmetic,
+hand-written parser — no eval), `base` (hex/dec/bin/oct), `semver`, `cron`
+(validate + explain + next runs), `regex` (test, don't assume), `url`, `escape`
+(shell/JSON/regex/HTML/URL), `case` (naming styles).
+
+**Actions**: `replace` (multi-file literal find/replace, dry-run by default),
+`wait` (block until port/URL/file ready), `http` (probe with capped body preview).
+
+### Changed
+
+- **~6× faster startup for headless/agent calls** (~0.4s → ~0.06s): sharp,
+  inquirer, figlet, boxen, ora and the banner clock now lazy-load.
+- `capabilities --json` gained `docs` (README + llms.txt URLs), `categories`,
+  and a `category` per command; human output groups by category.
+- README/llms.txt document the zero-install path (`npx -y @master4n/master-cli`)
+  and the full 43-command agent contract.
+- Quality gates are real now: ESLint 10 (flat config) + Prettier with CI
+  enforcement, a 150-code-line cap per file, and a Windows CI leg exercising
+  the netstat/where paths. Tests: 32 → 90, split per domain.
+- Command registration is typed (`CliCommand`); catalog split into three
+  category-tagged data modules.
+
+### Fixed
+
+- **`kill -p <bad-port>` now follows the exit-code contract** — `InvalidPort`/
+  exit 2 (usage) instead of `CommandError`/exit 1; ports range-checked (1..65535).
+
+### Security
+
+- Added `SECURITY.md` (threat model, guarantees, reporting policy) — shipped
+  inside the npm package.
+- `kill` refuses non-numeric PIDs parsed from `lsof`/`netstat` output.
+- `env` redacts secret-looking values unconditionally (no off switch);
+  `dotenv` never reads values at all; `have` validates tool names against a
+  strict charset before probing.
+- `~/.mfn/cache` is created with mode `0700`.
+
+### Changed
+
+- **~6× faster startup for headless/agent calls.** All TTY-only and
+  format-specific dependencies (`sharp`, `inquirer`, `figlet`, `boxen`, `ora`,
+  and the banner's temporal-transformer clock) are now lazy-loaded, so a
+  headless `mfn <cmd> --json` pays only for what it uses
+  (~0.4s → ~0.06s per invocation on a warm cache).
+- `capabilities --json` now includes a `docs` block pointing agents at the
+  README and the raw `llms.txt` agent contract.
+- README/llms.txt document the zero-install path:
+  `npx -y @master4n/master-cli <cmd> --json`.
+- Command registration is typed (`CliCommand` interface) instead of `any`.
+
+### Fixed
+
+- **`kill -p <bad-port>` now follows the exit-code contract.** An invalid or
+  out-of-range port was thrown from the yargs coercer and surfaced as
+  `CommandError`/exit 1; it is now `InvalidPort`/exit 2 (usage), and ports are
+  range-checked (1..65535).
+
+### Security
+
+- Added `SECURITY.md` (threat model, guarantees, reporting policy) — also
+  shipped inside the npm package.
+- `kill` refuses non-numeric PIDs parsed from `lsof`/`netstat` output
+  (defense-in-depth; prevents a parsing surprise becoming a stray `kill`
+  argument such as `-1`).
+- `~/.mfn/cache` is created with mode `0700` (recent-port history and ignore
+  lists are user-private).
+
 ## [3.0.2] — 2026-06-06
 
 Correctness + consistency from a cold-install review, plus discoverability.

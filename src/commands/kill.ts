@@ -4,7 +4,6 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { platform } from 'os';
 import fs from 'fs-extra';
-import inquirer from 'inquirer';
 import path from 'path';
 import { withJsonFlag, canPrompt, emit, fail } from '../utility/io';
 
@@ -34,9 +33,7 @@ async function getProcessId(port: number): Promise<ProcessInfo | null> {
   try {
     if (isWin) {
       const { stdout } = await run('netstat', ['-ano']);
-      const line = stdout
-        .split('\n')
-        .find((l) => l.includes(`:${port}`) && /LISTENING/i.test(l));
+      const line = stdout.split('\n').find((l) => l.includes(`:${port}`) && /LISTENING/i.test(l));
       const pid = line ? line.trim().split(/\s+/).pop() : null;
       return pid ? { port, pid } : null;
     }
@@ -51,6 +48,12 @@ async function getProcessId(port: number): Promise<ProcessInfo | null> {
 }
 
 async function killProcessById(pid: string): Promise<void> {
+  // The pid comes from parsing lsof/netstat output. execFile already prevents
+  // shell injection, but require a strictly numeric pid anyway so a parsing
+  // surprise can never become a stray kill argument (e.g. "-1" = all processes).
+  if (!/^\d+$/.test(pid)) {
+    throw new Error(`Refusing to kill non-numeric PID "${pid}"`);
+  }
   if (isWin) {
     await run('taskkill', ['/PID', pid, '/F']);
   } else {
@@ -67,14 +70,8 @@ const builder = (yargs: any) =>
       alias: 'p',
       describe: 'Port number(s) to free',
       type: 'array',
-      coerce: (arg: any) => {
-        const arr = Array.isArray(arg) ? arg : [arg];
-        return arr.map((p: any) => {
-          const n = Number(p);
-          if (isNaN(n)) throw new Error(`Invalid port number: ${p}`);
-          return n;
-        });
-      },
+      // Validation happens in the handler (not coerce): a coerce throw surfaces
+      // as CommandError/exit 1, but bad input must be UsageError/exit 2.
     })
     .option('yes', {
       alias: 'y',
@@ -85,7 +82,20 @@ const builder = (yargs: any) =>
     .example('mfn kill -p 3000 8080 -y --json', 'free ports 3000 and 8080');
 
 const handler = async (argv: any) => {
-  let ports = (argv.ports as number[]) ?? [];
+  const rawPorts = (argv.ports as unknown[]) ?? [];
+  let ports: number[] = [];
+  for (const p of rawPorts) {
+    const n = Number(p);
+    if (!Number.isInteger(n) || n < 1 || n > 65535) {
+      return fail(
+        argv,
+        'InvalidPort',
+        `Invalid port number: ${p} (expected an integer in 1..65535).`,
+        2,
+      );
+    }
+    ports.push(n);
+  }
 
   if (ports.length === 0) {
     // Cache-replay is a human convenience only. In headless/--json mode an agent
@@ -96,7 +106,12 @@ const handler = async (argv: any) => {
       ports = cached.ports;
       logger.info(`Using cached ports [${ports.join(', ')}]`);
     } else {
-      return fail(argv, 'NoPorts', 'No ports provided. Use -p <port...>. See `mfn kill --help`.', 2);
+      return fail(
+        argv,
+        'NoPorts',
+        'No ports provided. Use -p <port...>. See `mfn kill --help`.',
+        2,
+      );
     }
   }
 
@@ -117,6 +132,8 @@ const handler = async (argv: any) => {
   // Selection: agent/headless or --yes ⇒ kill all; on a TTY, let the user pick.
   let targets = found;
   if (canPrompt(argv) && !argv.yes) {
+    // inquirer is TTY-only — lazy import keeps headless invocations fast.
+    const { default: inquirer } = await import('inquirer');
     const { pids } = await inquirer.prompt([
       {
         type: 'checkbox',
@@ -141,7 +158,8 @@ const handler = async (argv: any) => {
 
   emit(argv, { killed, failed, notFound }, () => {
     for (const k of killed) logger.info(`Killed PID ${k.pid} on port ${k.port}`);
-    for (const f of failed) logger.error(`Failed to kill PID ${f.pid} (port ${f.port}): ${f.error}`);
+    for (const f of failed)
+      logger.error(`Failed to kill PID ${f.pid} (port ${f.port}): ${f.error}`);
     if (notFound.length) logger.warn(`No process on [${notFound.join(', ')}]`);
   });
 

@@ -1,10 +1,4 @@
-import inquirer from 'inquirer';
-import {
-  Logger,
-  colorQuestions,
-  getCacheDirectory,
-  saveIgnoresToCache,
-} from '../utility';
+import { Logger, colorQuestions, getCacheDirectory, saveIgnoresToCache } from '../utility';
 import fuzzy from 'fuzzy';
 import fs from 'fs-extra';
 import path from 'path';
@@ -63,6 +57,8 @@ async function interactive(
   depth: number,
   limit: number,
 ): Promise<void> {
+  // inquirer is TTY-only — lazy import keeps headless invocations fast.
+  const { default: inquirer } = await import('inquirer');
   const all = walk(root, ignores, depth);
   const { pattern } = await inquirer.prompt([
     { type: 'input', name: 'pattern', message: colorQuestions('Filter (fuzzy, blank = all):') },
@@ -144,7 +140,13 @@ const handler = async (argv: any) => {
 
   emit(
     argv,
-    { pattern: argv.pattern ?? null, root, count: matches.length, truncated: matched.length > matches.length, matches },
+    {
+      pattern: argv.pattern ?? null,
+      root,
+      count: matches.length,
+      truncated: matched.length > matches.length,
+      matches,
+    },
     () => {
       logger.info(`${matches.length} match(es) under ${root}`);
       for (const m of matches) console.log(m);

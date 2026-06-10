@@ -11,6 +11,36 @@ import hash from './hash';
 import encode from './encode';
 import random from './random';
 import port from './port';
+import jsonCmd from './json';
+import count from './count';
+import lines from './lines';
+import have from './have';
+import sys from './sys';
+import repo from './repo';
+import calc from './calc';
+import semver from './semver';
+import caseCmd from './case';
+import cron from './cron';
+import diff from './diff';
+import env from './env';
+import size from './size';
+import ext from './ext';
+import freq from './freq';
+import regex from './regex';
+import url from './url';
+import ip from './ip';
+import escapeCmd from './escape';
+import schema from './schema';
+import outlineCmd from './outline';
+import imports from './imports';
+import replace from './replace';
+import recent from './recent';
+import pkgCmd from './pkg';
+import dotenv from './dotenv';
+import wait from './wait';
+import ports from './ports';
+import http from './http';
+import base from './base';
 
 export {
   cts,
@@ -26,4 +56,34 @@ export {
   encode,
   random,
   port,
+  jsonCmd,
+  count,
+  lines,
+  have,
+  sys,
+  repo,
+  calc,
+  semver,
+  caseCmd,
+  cron,
+  diff,
+  env,
+  size,
+  ext,
+  freq,
+  regex,
+  url,
+  ip,
+  escapeCmd,
+  schema,
+  outlineCmd,
+  imports,
+  replace,
+  recent,
+  pkgCmd,
+  dotenv,
+  wait,
+  ports,
+  http,
+  base,
 };

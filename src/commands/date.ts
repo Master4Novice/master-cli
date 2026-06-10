@@ -1,17 +1,11 @@
-import inquirer from 'inquirer';
 import { Logger, colorQuestions } from '../utility';
 import { withJsonFlag, canPrompt, emit, fail } from '../utility/io';
-import {
-  parseToEpoch,
-  convertEpochToTimezone,
-  getEpochNow,
-} from '@master4n/temporal-transformer';
+import { parseToEpoch, convertEpochToTimezone, getEpochNow } from '@master4n/temporal-transformer';
 
 const logger = Logger();
 
 const DEFAULT_FORMAT = 'yyyy-MM-dd HH:mm:ss';
-const localZone = (): string =>
-  Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+const localZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
 interface DateArgs {
   from?: string;
@@ -73,6 +67,8 @@ function runDate(argv: DateArgs): void {
 
 /** TTY-only fallback when no input flags are supplied. */
 async function interactive(argv: DateArgs): Promise<void> {
+  // inquirer is TTY-only — lazy import keeps headless invocations fast.
+  const { default: inquirer } = await import('inquirer');
   const answers = await inquirer.prompt([
     {
       type: 'input',
@@ -124,7 +120,12 @@ const handler = async (argv: any) => {
     json: argv.json,
   };
   // With no input AND on a TTY (and not --json), offer the interactive flow.
-  if (argv.from === undefined && argv.tz === undefined && argv.format === undefined && canPrompt(argv)) {
+  if (
+    argv.from === undefined &&
+    argv.tz === undefined &&
+    argv.format === undefined &&
+    canPrompt(argv)
+  ) {
     return interactive(args);
   }
   runDate(args);

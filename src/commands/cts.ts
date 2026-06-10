@@ -1,12 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import sharp from 'sharp';
-import {
-  Logger,
-  getCacheDirectory,
-  validateNumberArguments,
-  saveIgnoresToCache,
-} from '../utility';
+import { Logger, getCacheDirectory, validateNumberArguments, saveIgnoresToCache } from '../utility';
 import { withJsonFlag, emit, fail } from '../utility/io';
 
 const logger = Logger();
@@ -45,7 +39,7 @@ function buildTreeText(dirPath: string, ignore: Set<string>, prefix = ''): strin
     // A broken symlink / vanished entry must NOT crash the whole tree — treat
     // anything we can't stat as a leaf. (BUG-1: this used to throw uncaught,
     // producing a stack trace and no JSON.)
-    let isDir = false;
+    let isDir: boolean;
     try {
       isDir = fs.statSync(itemPath).isDirectory();
     } catch {
@@ -135,6 +129,9 @@ const handler = async (argv: any) => {
     if (type === 'svg') {
       fs.outputFileSync(file, svg);
     } else {
+      // sharp is a heavy native module needed only for png/jpeg export — load
+      // it lazily so the common text/JSON path never pays its startup cost.
+      const { default: sharp } = await import('sharp');
       await sharp(Buffer.from(svg))[type === 'png' ? 'png' : 'jpeg']().toFile(file);
     }
   } catch (error) {

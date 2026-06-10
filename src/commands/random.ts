@@ -28,7 +28,12 @@ const describe = 'Generate cryptographically secure random bytes or a password';
 
 const builder = (yargs: any) =>
   withJsonFlag(yargs)
-    .option('bytes', { alias: 'b', describe: 'Number of random bytes', type: 'number', default: 32 })
+    .option('bytes', {
+      alias: 'b',
+      describe: 'Number of random bytes',
+      type: 'number',
+      default: 32,
+    })
     .option('encoding', {
       alias: 'e',
       describe: 'Output encoding for bytes',
@@ -36,7 +41,12 @@ const builder = (yargs: any) =>
       choices: ['hex', 'base64', 'base64url'],
       default: 'hex',
     })
-    .option('password', { alias: 'p', describe: 'Generate a password instead of raw bytes', type: 'boolean', default: false })
+    .option('password', {
+      alias: 'p',
+      describe: 'Generate a password instead of raw bytes',
+      type: 'boolean',
+      default: false,
+    })
     .option('length', { alias: 'l', describe: 'Password length', type: 'number', default: 24 })
     .example('mfn random --json', '32 secure random bytes as hex')
     .example('mfn random -b 16 -e base64url --json', '16 bytes, base64url')

@@ -6,11 +6,13 @@
 ![License](https://img.shields.io/npm/l/%40master4n%2Fmaster-cli)
 ![Owner](https://img.shields.io/badge/Owner-Master4Novice-orange?style=flat)
 
-**Master CLI for developers and AI agents.** A set of headless, JSON-first
-commands that replace the boilerplate agents otherwise regenerate on every
-machine — timestamp/date conversion, JWT decoding, freeing ports, finding files,
-and directory trees. Every command runs the same for a human at a terminal and
-for an agent reading stdout.
+**Master CLI for developers and AI agents.** 43 headless, JSON-first commands in
+three families: **token savers** (extract exactly what you need — one JSON field,
+a line range, a file outline — instead of dumping whole files into context),
+**exact computation** (BigInt math, semver, cron, regex, timezones — verified
+answers instead of guesses), and **one-call actions** (free a port, wait for a
+server, bulk-replace with dry-run). Every command runs the same for a human at a
+terminal and for an agent reading stdout, in ~60ms.
 
 ## Installation
 
@@ -19,6 +21,19 @@ npm install -g @master4n/master-cli
 ```
 
 This installs the `mfn` command.
+
+### Zero-install (agents & one-off use)
+
+No global install needed — `npx` runs any command directly:
+
+```sh
+npx -y @master4n/master-cli capabilities --json   # discover every command
+npx -y @master4n/master-cli epoch 1622547800 --json
+```
+
+> **For AI agents:** run `mfn capabilities --json` (or the npx form above) to get
+> the machine-readable manifest, and read [`llms.txt`](./llms.txt) — it ships
+> inside the npm package and documents the full agent contract.
 
 ## The contract (why it's agent-friendly)
 
@@ -45,25 +60,56 @@ mfn -v                 # version
 mfn capabilities --json   # machine-readable manifest of all commands
 ```
 
-## Commands
+## Commands (43)
+
+Run `mfn capabilities` for the grouped list, `mfn <command> --help` for flags.
+
+### Token savers — read less, extract exactly
 
 | Command | What it does | Example |
 | ------- | ------------ | ------- |
-| `capabilities` | Self-describing manifest of every command | `mfn capabilities --json` |
-| `id` | Generate IDs — UUID v4, time-ordered UUID v7, or URL-safe nano | `mfn id --json` · `mfn id -t uuid7 -n 3 --json` |
-| `hash` | Hash a string, file, or stdin (md5/sha1/sha256/sha512) | `mfn hash hello --json` · `mfn hash -f ./x --json` |
-| `encode` | Encode/decode text — base64, base64url, hex, url | `mfn encode hi --json` · `mfn encode aGk= -d --json` |
-| `random` | Secure random bytes, or an unbiased password | `mfn random --json` · `mfn random -p -l 32 --json` |
-| `port` | Find a free port, or check if one is available | `mfn port --json` · `mfn port -c 3000 --json` |
-| `epoch` | Convert between epoch timestamps and dates (auto-detects s/ms/µs/ns) | `mfn epoch 1622547800 --json` · `mfn epoch --from 2021-06-01T11:43:20Z --json` |
-| `date` | Convert/format a date across timezones (defaults to now) | `mfn date 2024-07-04T15:30:30Z --tz America/New_York --json` |
-| `decode` | Decode a JWT (header + payload + expiry; signature **not** verified) | `mfn decode -t <jwt> --json` |
-| `kill` | Kill the process(es) listening on given ports | `mfn kill -p 3000 8080 -y --json` |
-| `sc` | Fuzzy-find files/folders under the current directory | `mfn sc service --json` |
-| `cts` | Print (or export) a tree of the current directory | `mfn cts --json` · `mfn cts -t png` |
-| `update` | Update the CLI (or a named package) to the latest version | `mfn update --json` |
+| `json` | One value from JSON by path — don't read the document | `mfn json scripts.build -f package.json --json` |
+| `schema` | Infer JSON shape (paths + types); 10MB payload → ~20 lines | `mfn schema -f response.json --json` |
+| `count` | Lines/words/chars/bytes + **LLM token estimate** | `git diff \| mfn count --json` |
+| `lines` | Exact line range of a file (1-based), never the whole file | `mfn lines src/app.ts -s 120 -n 30 --json` |
+| `outline` | Symbols + line numbers (.ts .js .py .go .md) | `mfn outline src/app.ts --json` |
+| `diff` | Structured hunks of two files, counts first | `mfn diff old.json new.json -s --json` |
+| `freq` | Most repeated lines — log triage in one call | `mfn freq error.log -t 5 --json` |
+| `imports` | A file's imports, or who imports a module | `mfn imports --who utility --json` |
+| `repo` | Git branch/dirty/ahead-behind/commits in one object | `mfn repo --json` |
+| `sys` / `have` / `ip` | System facts · tool versions · local addresses | `mfn have node git docker --json` |
+| `size` / `ext` / `recent` | Disk usage · composition by extension · newest files | `mfn size -t 5 --json` |
+| `ports` | ALL listening TCP ports with owning processes | `mfn ports --json` |
+| `pkg` | Declared vs installed dependency versions | `mfn pkg --json` |
+| `env` / `dotenv` | Env inspection (secrets **always** redacted) · .env completeness | `mfn dotenv --json` |
 
-Run `mfn <command> --help` for the full flag list and more examples.
+### Exact computation — never guess
+
+| Command | What it does | Example |
+| ------- | ------------ | ------- |
+| `calc` | BigInt-exact arithmetic — `2^53 + 1` comes out right | `mfn calc "2^53 + 1" --json` |
+| `base` | hex/dec/bin/oct conversion, BigInt-safe | `mfn base 0xff --json` |
+| `semver` | Validate/compare/sort/bump per semver.org | `mfn semver 1.10.0 1.9.2 --json` |
+| `cron` | Validate + explain + next run times | `mfn cron "*/15 9-17 * * 1-5" --json` |
+| `regex` | Test a pattern — matches with line/index/groups | `mfn regex "TODO" -f src/app.ts --json` |
+| `url` | URL → components + decoded query params | `mfn url "https://x.com/a?b=1" --json` |
+| `escape` | Context-exact escaping: shell, JSON, regex, HTML, URL | `mfn escape "it's" --json` |
+| `case` | camel/snake/kebab/pascal/… conversion | `mfn case getUserName -t snake --json` |
+| `epoch` / `date` | Epoch ↔ date (auto unit) · timezone conversion | `mfn epoch 1622547800 --json` |
+| `decode` | JWT header + payload + expiry (signature not verified) | `mfn decode -t <jwt> --json` |
+
+### Actions — do, don't script
+
+| Command | What it does | Example |
+| ------- | ------------ | ------- |
+| `replace` | Literal find/replace across files — **dry-run by default** | `mfn replace old new -g "src/**/*.ts" --json` |
+| `wait` | Block until port/URL/file is ready — no sleep loops | `mfn wait -p 3000 -t 30 --json` |
+| `kill` | Free the ports your dev server got stuck on | `mfn kill -p 3000 8080 -y --json` |
+| `http` | Probe a URL: status/headers/timing, capped body preview | `mfn http localhost:3000/health --json` |
+| `port` | Find a free port, or check one | `mfn port -c 3000 --json` |
+| `id` / `hash` / `encode` / `random` | UUID v4/v7/nano · digests · codecs · CSPRNG | `mfn id -t uuid7 -n 3 --json` |
+| `sc` / `cts` | Fuzzy file find · directory tree | `mfn sc service --json` |
+| `capabilities` / `update` | Machine-readable manifest · self-update | `mfn capabilities --json` |
 
 ### Examples
 

@@ -16,8 +16,7 @@ function uuidV7(): string {
 
 // 64-char URL-safe alphabet. Because 64 is a power of two, `byte & 63` maps
 // uniformly onto it — no modulo bias.
-const NANO_ALPHABET =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
+const NANO_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
 
 function nano(size: number): string {
   let id = '';
@@ -76,9 +75,7 @@ const handler = (argv: any) => {
   if (type === 'nano' && (!Number.isInteger(size) || size < 1 || size > MAX_SIZE)) {
     return fail(argv, 'InvalidSize', `--size must be an integer in 1..${MAX_SIZE}.`, 2);
   }
-  const ids = Array.from({ length: count }, () =>
-    type === 'nano' ? nano(size) : generate(type),
-  );
+  const ids = Array.from({ length: count }, () => (type === 'nano' ? nano(size) : generate(type)));
   emit(argv, { type, count, ids }, () => ids.forEach((id) => console.log(id)));
 };
 

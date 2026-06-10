@@ -1,13 +1,14 @@
 {
   "name": "@master4n/master-cli",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "AI-agent-friendly command-line toolkit: timestamp/date conversion, JWT decoding, port killing, file finding, and directory trees — headless, --json, with a self-describing manifest.",
   "type": "module",
   "scripts": {
     "clean": "rimraf dist",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
+    "lint": "eslint src test",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "build": "npm run clean && rollup --config",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -33,6 +34,10 @@
     "ai-agents",
     "agent-tools",
     "llm-tools",
+    "llms-txt",
+    "agent-friendly",
+    "claude-code",
+    "coding-agent",
     "automation",
     "headless",
     "json-output",
@@ -77,6 +82,7 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^1.0.0",
@@ -86,12 +92,15 @@
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.12.12",
     "@types/yargs": "^17.0.32",
+    "eslint": "^10.4.1",
+    "prettier": "^3.8.4",
     "rimraf": "^5.0.5",
     "rollup": "^4.12.1",
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-dts": "^6.1.0",
     "tslib": "^2.6.3",
     "typescript": "^5.4.2",
+    "typescript-eslint": "^8.61.0",
     "vitest": "^4.1.8"
   }
 }

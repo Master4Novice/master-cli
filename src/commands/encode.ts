@@ -48,7 +48,12 @@ const builder = (yargs: any) =>
       choices: ['base64', 'base64url', 'hex', 'url'],
       default: 'base64',
     })
-    .option('decode', { alias: 'd', describe: 'Decode instead of encode', type: 'boolean', default: false })
+    .option('decode', {
+      alias: 'd',
+      describe: 'Decode instead of encode',
+      type: 'boolean',
+      default: false,
+    })
     .example('mfn encode hello --json', 'base64-encode "hello"')
     .example('mfn encode aGVsbG8= -d --json', 'base64-decode')
     .example('mfn encode "a b&c" --as url --json', 'url-encode');
@@ -70,7 +75,11 @@ const handler = async (argv: any) => {
     output = decoding ? decode(input, codec) : encode(input, codec);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return fail(argv, 'CodecError', `Could not ${decoding ? 'decode' : 'encode'} as ${codec}: ${message}`);
+    return fail(
+      argv,
+      'CodecError',
+      `Could not ${decoding ? 'decode' : 'encode'} as ${codec}: ${message}`,
+    );
   }
 
   emit(argv, { operation: decoding ? 'decode' : 'encode', codec, input, output }, () =>

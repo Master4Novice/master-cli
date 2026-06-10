@@ -11,12 +11,18 @@ permissions:
 
 jobs:
   verify:
-    name: verify (node ${{ matrix.node }})
-    runs-on: ubuntu-latest
+    name: verify (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         node: ['20', '22']
+        include:
+          # One Windows leg so the netstat/taskkill/where code paths are
+          # actually exercised, not just written.
+          - os: windows-latest
+            node: '22'
 
     steps:
       - name: Checkout
@@ -30,6 +36,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
 
       - name: Typecheck
         run: npm run typecheck

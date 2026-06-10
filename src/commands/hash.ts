@@ -9,7 +9,10 @@ const describe = 'Hash a string, file, or stdin (md5/sha1/sha256/sha512)';
 
 const builder = (yargs: any) =>
   withJsonFlag(yargs)
-    .positional('text', { describe: 'String to hash (or pipe via stdin, or use --file)', type: 'string' })
+    .positional('text', {
+      describe: 'String to hash (or pipe via stdin, or use --file)',
+      type: 'string',
+    })
     .option('algo', {
       alias: 'a',
       describe: 'Hash algorithm',
@@ -17,7 +20,11 @@ const builder = (yargs: any) =>
       choices: ALGOS as unknown as string[],
       default: 'sha256',
     })
-    .option('file', { alias: 'f', describe: 'Hash the contents of this file instead', type: 'string' })
+    .option('file', {
+      alias: 'f',
+      describe: 'Hash the contents of this file instead',
+      type: 'string',
+    })
     .option('encoding', {
       alias: 'e',
       describe: 'Digest encoding',

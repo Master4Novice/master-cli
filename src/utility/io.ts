@@ -27,8 +27,7 @@ export const withJsonFlag = (yargs: any) =>
   });
 
 /** Should this invocation produce JSON? (explicit flag, or non-TTY stdout). */
-export const wantsJson = (argv: { json?: boolean }): boolean =>
-  Boolean(argv?.json) || !isTTY();
+export const wantsJson = (argv: { json?: boolean }): boolean => Boolean(argv?.json) || !isTTY();
 
 /** Write one line of JSON to stdout. */
 const writeJson = (obj: Record<string, unknown>): void => {
@@ -59,12 +58,7 @@ export function emit(
  * @param error   short stable machine code, e.g. `"InvalidInput"`.
  * @param message human-readable explanation.
  */
-export function fail(
-  argv: { json?: boolean },
-  error: string,
-  message: string,
-  code = 1,
-): never {
+export function fail(argv: { json?: boolean }, error: string, message: string, code = 1): never {
   if (wantsJson(argv)) {
     writeJson({ ok: false, error, message });
   } else {
@@ -74,8 +68,7 @@ export function fail(
 }
 
 /** True when a TTY-interactive fallback is appropriate (TTY and not --json). */
-export const canPrompt = (argv: { json?: boolean }): boolean =>
-  isTTY() && !argv?.json;
+export const canPrompt = (argv: { json?: boolean }): boolean => isTTY() && !argv?.json;
 
 /**
  * Read all of stdin as a UTF-8 string. Returns '' immediately when stdin is a

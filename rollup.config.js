@@ -16,7 +16,7 @@ const config = [
             banner: '#!/usr/bin/env node'
          }
     ],
-    external: [ 'yargs', 'chalk', 'boxen', 'figlet', 'fs-extra', 'sharp', 'inquirer', 'inquirer-fuzzy-path', 'path', 'fuzzy', 'ora', 'os', '@master4n/temporal-transformer' ],
+    external: [ 'yargs', 'chalk', 'boxen', 'figlet', 'fs-extra', 'sharp', 'inquirer', 'path', 'fuzzy', 'ora', 'os', '@master4n/temporal-transformer' ],
     plugins: [
         resolve(),
         terser(),
@@ -26,7 +26,7 @@ const config = [
         json(),
         copy({
           targets: [
-            { src: ["README.md", "llms.txt", "LICENSE"], dest: "dist" },
+            { src: ["README.md", "llms.txt", "LICENSE", "SECURITY.md"], dest: "dist" },
             {
               src: "package.json",
               dest: "dist",

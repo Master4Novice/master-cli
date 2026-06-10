@@ -1,7 +1,7 @@
-import inquirer from 'inquirer';
-import { Logger, colorQuestions } from '../utility';
+import { Logger } from '../utility';
 import { withJsonFlag, canPrompt, emit, fail } from '../utility/io';
 import { convertEpoch, parseToEpoch } from '@master4n/temporal-transformer';
+import { epochInteractive } from './epoch.interactive';
 
 const logger = Logger();
 
@@ -84,42 +84,6 @@ function dateToEpoch(argv: any, input: string, format?: string, tz?: string): vo
   );
 }
 
-/** TTY-only fallback when no flags/positional are supplied. */
-async function interactive(argv: any): Promise<void> {
-  const { operation } = await inquirer.prompt([
-    {
-      type: 'rawlist',
-      name: 'operation',
-      message: colorQuestions('What do you want to do?'),
-      choices: [
-        { name: 'Convert epoch → human-readable date', value: 'epochToDate' },
-        { name: 'Convert date string → epoch', value: 'dateToEpoch' },
-      ],
-    },
-  ]);
-  if (operation === 'epochToDate') {
-    const { value } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'value',
-        message: colorQuestions('Enter epoch value:'),
-        validate: (v: string) => (v.trim() && !isNaN(Number(v))) || 'Enter a number',
-      },
-    ]);
-    epochToDate(argv, Number(value));
-  } else {
-    const { input } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'input',
-        message: colorQuestions('Enter a date string (ISO 8601):'),
-        validate: (v: string) => Boolean(v.trim()) || 'Enter a date string',
-      },
-    ]);
-    dateToEpoch(argv, input, undefined, argv.tz);
-  }
-}
-
 const command = 'epoch [value]';
 const describe = 'Convert between epoch timestamps and dates (auto-detects unit)';
 
@@ -158,7 +122,7 @@ const handler = async (argv: any) => {
     return epochToDate(argv, Number(raw));
   }
   if (canPrompt(argv)) {
-    return interactive(argv);
+    return epochInteractive(argv, epochToDate, dateToEpoch);
   }
   fail(
     argv,
