@@ -75,6 +75,12 @@ included), and `mfn_help` (per-command flags). `update` is deny-listed so an
 MCP-only client can never install packages. `mfn mcp --json` describes the
 server without starting it.
 
+An [Agent Skill](./skills/mfn/SKILL.md) ships at `skills/mfn/SKILL.md` — a
+portable SKILL.md (YAML frontmatter + usage guide) that teaches any coding
+agent (Claude Code, Roo, Cline, …) the full command catalog, output contract,
+recipes, and gotchas. `.claude/skills/mfn` symlinks to it so Claude Code
+auto-discovers it in this repo; point other agents at the file directly.
+
 This repo ships a [`.mcp.json`](./.mcp.json) with exactly this wiring, so
 cloning it gives Claude Code (and any client honouring project-scope MCP
 config) the `mfn` server automatically.
