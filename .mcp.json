@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mfn": {
+      "command": "npx",
+      "args": ["-y", "@master4n/master-cli", "mcp"]
+    }
+  }
+}

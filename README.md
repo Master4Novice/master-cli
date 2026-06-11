@@ -75,6 +75,10 @@ included), and `mfn_help` (per-command flags). `update` is deny-listed so an
 MCP-only client can never install packages. `mfn mcp --json` describes the
 server without starting it.
 
+This repo ships a [`.mcp.json`](./.mcp.json) with exactly this wiring, so
+cloning it gives Claude Code (and any client honouring project-scope MCP
+config) the `mfn` server automatically.
+
 ## Quick start
 
 ```sh
