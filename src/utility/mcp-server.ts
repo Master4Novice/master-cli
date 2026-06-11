@@ -67,10 +67,18 @@ async function handleMessage(msg: any): Promise<void> {
   }
 }
 
-/** Serve until stdin closes (client disconnect). Never returns. */
+/**
+ * Serve until stdin closes (client disconnect). Never returns.
+ *
+ * Requests are handled CONCURRENTLY: a slow tool call (`wait`, a long `http`
+ * probe) must not block `ping` or other calls behind it. JSON-RPC clients
+ * correlate responses by id, so out-of-order replies are fine; each reply is
+ * one atomic write, so concurrent lines never interleave.
+ */
 export async function serveMcp(): Promise<never> {
   process.stderr.write(`${pkg.name} v${pkg.version} — MCP server ready (stdio)\n`);
   const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });
+  const inFlight = new Set<Promise<void>>();
   for await (const line of rl) {
     const trimmed = line.trim();
     if (!trimmed) continue;
@@ -81,12 +89,14 @@ export async function serveMcp(): Promise<never> {
       replyError(null, -32700, 'Parse error: messages must be one JSON object per line');
       continue;
     }
-    try {
-      await handleMessage(msg);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      replyError(msg?.id ?? null, -32603, `Internal error: ${message}`);
-    }
+    const task: Promise<void> = handleMessage(msg)
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        replyError(msg?.id ?? null, -32603, `Internal error: ${message}`);
+      })
+      .finally(() => inFlight.delete(task));
+    inFlight.add(task);
   }
+  await Promise.allSettled([...inFlight]); // drain in-flight replies before exit
   process.exit(0); // stdin closed — client disconnected
 }

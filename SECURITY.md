@@ -40,7 +40,7 @@ use any flag that exists:
 | --------- | -------- | ---------------- |
 | **Sensitive-path refusal** (`SensitivePath`, exit 2) | `lines` `json` `schema` `diff` `freq` `regex -f` `hash -f` | Returning the CONTENT of credential stores: `~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.kube`, `.env*`, `*.pem`, `*.key`, `id_rsa*`, `.npmrc`, `.netrc`, `shadow`, … An agent's context window is a log that never rotates. `hash -f` is included because a digest of a low-entropy secrets file can be brute-forced offline. |
 | **Clipboard secret redaction** | `clip` (read) | Passwords/tokens pasted through the clipboard (password managers). Secret-shaped content (private-key blocks, JWTs, AWS/GitHub/Slack/Google/npm/`sk-` tokens) is withheld with `redacted:true`. |
-| **Env value scanning** | `env` | Redacts by NAME pattern (key/token/secret/…) **and** by VALUE shape — an innocently named variable holding a JWT is still redacted. `mfn env` with no names lists names only. |
+| **Env value scanning** | `env` | Redacts by NAME pattern (key/token/secret/…) **and** by VALUE shape — an innocently named variable holding a JWT is still redacted. The mask is uniform (`••••` + length): no prefix/suffix characters are ever revealed. `mfn env` with no names lists names only. |
 | **Dotenv never reads values** | `dotenv` | Compares KEY presence between `.env` and `.env.example`; values are never parsed, stored, or returned. |
 | **Cloud-metadata block** (`BlockedTarget`, exit 2) | `http` `wait -u` | SSRF credential theft via `169.254.169.254`, `metadata.google.internal`, Alibaba/AWS v6 endpoints. Localhost stays allowed — probing your own dev server is the point. |
 | **Session-cookie redaction** | `http` | `set-cookie` response headers are replaced with `[redacted: session cookie]`. |

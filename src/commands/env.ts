@@ -9,10 +9,10 @@ import { scanSecrets } from '../utility/guard';
 const SECRET_PATTERN =
   /(key|token|secret|password|passwd|credential|auth|cookie|session|private|api)/i;
 
-const redact = (value: string): string =>
-  value.length <= 8
-    ? '••••'
-    : `${value.slice(0, 3)}…${value.slice(-2)} (${value.length} chars, redacted)`;
+// Uniform mask — no value characters are ever revealed (a 3-char prefix of a
+// low-entropy secret is a real head start for offline guessing). The length
+// ships as a separate `chars` field, matching `clip`'s vocabulary.
+const MASK = '••••';
 
 const looksSecret = (name: string, value: string): boolean =>
   SECRET_PATTERN.test(name) || scanSecrets(value) !== null;
@@ -44,7 +44,9 @@ const handler = (argv: any) => {
       const raw = process.env[name];
       if (raw === undefined) return { name, set: false, value: null, redacted: false };
       const secret = looksSecret(name, raw);
-      return { name, set: true, value: secret ? redact(raw) : raw, redacted: secret };
+      return secret
+        ? { name, set: true, value: MASK, redacted: true, chars: raw.length }
+        : { name, set: true, value: raw, redacted: false };
     });
     const missing = vars.filter((v) => !v.set).map((v) => v.name);
     return emit(argv, { count: vars.length, missing, vars }, () => {
@@ -60,7 +62,9 @@ const handler = (argv: any) => {
     const vars = all.map((name) => {
       const raw = process.env[name] ?? '';
       const secret = looksSecret(name, raw);
-      return { name, set: true, value: secret ? redact(raw) : raw, redacted: secret };
+      return secret
+        ? { name, set: true, value: MASK, redacted: true, chars: raw.length }
+        : { name, set: true, value: raw, redacted: false };
     });
     return emit(argv, { prefix, count: vars.length, vars }, () => {
       for (const v of vars) console.log(`${v.name}=${v.value}`);

@@ -38,6 +38,20 @@ describe('env value-shape redaction', () => {
     expect(out).not.toContain(FAKE_JWT);
   });
 
+  it('redaction reveals no value characters — uniform mask + length only', () => {
+    const secret = 'zqxjkv-front-FAKESECRET-back-vkjxqz';
+    const out = execFileSync('node', [BIN, 'env', 'MY_TEST_API_KEY', '--json'], {
+      encoding: 'utf8',
+      env: { ...process.env, MY_TEST_API_KEY: secret },
+    });
+    const v = JSON.parse(out.trim()).vars[0];
+    expect(v.redacted).toBe(true);
+    expect(v.value).toBe('••••');
+    expect(v.chars).toBe(secret.length);
+    expect(out).not.toContain('zqxjkv'); // no prefix leak
+    expect(out).not.toContain('vkjxqz'); // no suffix leak
+  });
+
   it('leaves a normal value un-redacted', () => {
     const out = execFileSync('node', [BIN, 'env', 'TOTALLY_FINE_VAR', '--json'], {
       encoding: 'utf8',

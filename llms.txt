@@ -14,7 +14,8 @@
   (`{ name, version, bin, conventions, docs, categories, commands:[{name,category,summary,examples}] }`).
 - **MCP server built in:** `mfn mcp` serves every command over the Model Context
   Protocol (stdio) for MCP-only clients — tools `mfn_capabilities`, `mfn_run`
-  `{command, args[]}`, `mfn_help`; `update` is deny-listed. Client config:
+  `{command, args[]}`, `mfn_help`; `update` is deny-listed. Requests are handled
+  concurrently (a slow `wait` never blocks `ping`). Client config:
   `{ "command": "npx", "args": ["-y", "@master4n/master-cli", "mcp"] }`.
   `mfn mcp --json` describes the server without starting it.
 - **Machine output:** pass `--json`, OR just pipe the command (when stdout is not

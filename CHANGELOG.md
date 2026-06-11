@@ -4,6 +4,23 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.5] — 2026-06-11
+
+### Security
+
+- **Uniform env redaction.** Redacted values now always render as `••••` with
+  the length in a separate `chars` field (matching `clip`). Previously, values
+  over 8 chars revealed their first 3 and last 2 characters — a real head start
+  for offline guessing of low-entropy secrets. No value characters are ever
+  shown now.
+
+### Changed
+
+- **MCP server handles requests concurrently.** A slow tool call (`wait`, a
+  long `http` probe) no longer blocks `ping` or other calls queued behind it.
+  Responses correlate by JSON-RPC id (out-of-order is per spec); in-flight
+  replies are drained before exit on client disconnect.
+
 ## [3.0.4] — 2026-06-11
 
 ### Added

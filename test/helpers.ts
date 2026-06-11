@@ -40,3 +40,30 @@ export function runIn(cwd: string, ...args: string[]): Run {
   const singleObject = parseOk && !trimmed.includes('\n');
   return { code, stdout, trimmed, json, parseOk, singleObject };
 }
+
+/** A standard MCP initialize request (shared by the mcp test files). */
+export const MCP_INIT = {
+  jsonrpc: '2.0',
+  id: 1,
+  method: 'initialize',
+  params: {
+    protocolVersion: '2025-06-18',
+    capabilities: {},
+    clientInfo: { name: 't', version: '1' },
+  },
+};
+
+/**
+ * Pipe a scripted JSON-RPC session into `mfn mcp` (stdin closes after the
+ * script, so the server answers every request and exits 0 — exactly how an
+ * MCP client disconnect behaves). Returns the parsed response lines.
+ */
+export function mcpSession(...messages: Record<string, unknown>[]): any[] {
+  const input = messages.map((m) => JSON.stringify(m)).join('\n') + '\n';
+  const stdout = execFileSync('node', [BIN, 'mcp'], { encoding: 'utf8', input });
+  return stdout
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
