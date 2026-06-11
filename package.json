@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "publish:dryrun": "npm publish ./dist --dry-run",
     "publish:npm": "npm publish ./dist --access public",
-    "prepublishOnly": "echo 'Do not publish from repo root. Run: npm run build && npm run publish:npm' && exit 1"
+    "prepublishOnly": "echo 'Do not publish from repo root. Run: npm run build && npm run publish:npm' && exit 1",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -93,6 +94,7 @@
     "@types/node": "^20.12.12",
     "@types/yargs": "^17.0.32",
     "eslint": "^10.4.1",
+    "husky": "^9.1.7",
     "prettier": "^3.8.4",
     "rimraf": "^5.0.5",
     "rollup": "^4.12.1",

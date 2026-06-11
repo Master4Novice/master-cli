@@ -1,0 +1,12 @@
+# Pre-commit gate — mirrors the CI pipeline so failures surface locally,
+# BEFORE a red build. Same order, same commands: lint → format → typecheck →
+# build → test. Bypass in a true emergency with `git commit --no-verify`.
+set -e
+
+echo "▶ lint";          npm run lint
+echo "▶ format:check";  npm run format:check
+echo "▶ typecheck";     npm run typecheck
+echo "▶ build";         npm run build
+echo "▶ test";          npm run test
+
+echo "✓ pre-commit gate passed"

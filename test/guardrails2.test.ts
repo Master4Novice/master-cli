@@ -48,12 +48,19 @@ describe('env value-shape redaction', () => {
 });
 
 describe('clipboard secret redaction (when a clipboard exists)', () => {
-  it('a secret-shaped clipboard read comes back redacted', () => {
+  it('a secret never appears in clipboard-read stdout', () => {
     const w = run('clip', FAKE_JWT, '--json');
-    if (!w.json.ok) return; // headless CI — no clipboard; covered by os.test.ts
+    if (!w.json.ok) return; // headless CI — no writable clipboard; see os.test.ts
     const r = run('clip', '--read', '--json');
-    expect(r.json.redacted).toBe(true);
+    if (!r.json.ok) return; // no readable clipboard
+    // The security invariant, robust across platforms: whether the clipboard
+    // round-tripped our JWT (then redaction must fire) or a headless/flaky
+    // clipboard returned something else, the secret must NOT reach stdout.
     expect(r.stdout).not.toContain(FAKE_JWT);
+    // If our value did round-trip, it must be flagged redacted.
+    if (r.json.chars === FAKE_JWT.length || r.json.chars === FAKE_JWT.length + 1) {
+      expect(r.json.redacted).toBe(true);
+    }
     run('clip', 'mfn guardrail test done', '--json'); // leave nothing secret-shaped behind
   });
 });

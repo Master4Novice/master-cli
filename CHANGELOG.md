@@ -61,6 +61,16 @@ hand-written parser — no eval), `base` (hex/dec/bin/oct), `semver`, `cron`
   `epoch`/`date` output an `iso` ISO-8601 UTC field; a typoed command says
   `Unknown command: X. Did you mean "Y"?` instead of yargs' "Unknown argument".
 
+### Tooling
+
+- **Husky pre-commit gate** mirrors CI exactly (lint → format:check →
+  typecheck → build → test), so a red build is caught locally before the
+  commit lands. Bypass with `git commit --no-verify` in a true emergency.
+  (The `prepare` script is stripped from the published package.)
+- Clipboard guardrail test now asserts the real invariant — a secret never
+  reaches stdout — instead of assuming a flaky headless clipboard round-trips
+  (was failing the Windows CI leg).
+
 ### Security — CodeQL high-severity findings fixed
 
 - **TOCTOU file races** (`js/file-system-race`) in `replace` and `count`:
