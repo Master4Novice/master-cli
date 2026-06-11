@@ -29,7 +29,9 @@ function globToRegExp(glob: string): RegExp {
       out += '[^/]';
       i++;
     } else {
-      out += ch.replace(/[.+^${}()|[\]\\]/, '\\$&');
+      // Escape a single literal char. (Operating per-character, so this is a
+      // complete escape — no global-flag sanitization gap.)
+      out += /[.+^${}()|[\]\\]/.test(ch) ? '\\' + ch : ch;
       i++;
     }
   }
@@ -100,31 +102,36 @@ const handler = (argv: any) => {
   for (const abs of walk(root)) {
     const rel = path.relative(root, abs).split(path.sep).join('/');
     if (!matcher.test(rel)) continue;
-    let stat: fs.Stats;
+    // Operate on a single file descriptor — fstat/read/write all target the
+    // SAME open file, so there is no time-of-check/time-of-use race between a
+    // path check and a later path use (CodeQL js/file-system-race).
+    let fd: number;
     try {
-      stat = fs.statSync(abs);
+      fd = fs.openSync(abs, argv.write ? 'r+' : 'r');
     } catch {
-      continue;
+      continue; // vanished / unreadable since the directory walk
     }
-    if (stat.size > MAX_FILE_BYTES) continue;
-    let text: string;
     try {
-      text = fs.readFileSync(abs, 'utf8');
-    } catch {
-      continue; // binary/unreadable — skip
-    }
-    const count = (text.match(re) ?? []).length;
-    if (count === 0) continue;
-    if (argv.write) {
-      try {
-        fs.writeFileSync(abs, text.split(search).join(replacement));
-      } catch (error) {
-        errors.push({ file: rel, error: error instanceof Error ? error.message : String(error) });
-        continue;
+      if (fs.fstatSync(fd).size > MAX_FILE_BYTES) continue;
+      const text = fs.readFileSync(fd, 'utf8');
+      const count = (text.match(re) ?? []).length;
+      if (count === 0) continue;
+      if (argv.write) {
+        const updated = text.split(search).join(replacement);
+        fs.ftruncateSync(fd, 0);
+        fs.writeSync(fd, updated, 0, 'utf8');
       }
+      changes.push({ file: rel, count });
+      totalReplacements += count;
+    } catch (error) {
+      // A read-only failure (binary/unreadable) is a silent skip; a write
+      // failure is reported so the caller knows the change didn't land.
+      if (argv.write) {
+        errors.push({ file: rel, error: error instanceof Error ? error.message : String(error) });
+      }
+    } finally {
+      fs.closeSync(fd);
     }
-    changes.push({ file: rel, count });
-    totalReplacements += count;
   }
 
   emit(

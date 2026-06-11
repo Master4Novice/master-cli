@@ -1,7 +1,21 @@
 import chalk from 'chalk';
-import { getCurrentUserName } from '../utility';
+import os from 'node:os';
 import { COMMANDS } from '../catalog';
 import pkg from '../../package.json';
+
+/**
+ * A display-safe first name for the banner greeting. Sourced from the OS user
+ * database (not `process.env`, which CodeQL rightly treats as untrusted/
+ * sensitive for logging) and sanitised to a small safe charset + length, so
+ * nothing unexpected from the environment is ever rendered.
+ */
+function displayName(): string {
+  try {
+    return (os.userInfo().username || '').replace(/[^\p{L}\p{N} ._-]/gu, '').slice(0, 32);
+  } catch {
+    return '';
+  }
+}
 
 /** A friendly rotating tip — surfaces a different capability each run. */
 const TIPS: readonly string[] = [
@@ -44,7 +58,7 @@ export const logoWelcome = async () => {
     dimBorder: true,
   });
 
-  const user = getCurrentUserName();
+  const user = displayName();
   const dot = chalk.dim('  •  ');
 
   // Identity / environment chips.

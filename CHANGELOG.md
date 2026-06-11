@@ -61,6 +61,20 @@ hand-written parser — no eval), `base` (hex/dec/bin/oct), `semver`, `cron`
   `epoch`/`date` output an `iso` ISO-8601 UTC field; a typoed command says
   `Unknown command: X. Did you mean "Y"?` instead of yargs' "Unknown argument".
 
+### Security — CodeQL high-severity findings fixed
+
+- **TOCTOU file races** (`js/file-system-race`) in `replace` and `count`:
+  removed `stat`-then-open patterns. `replace` now operates on a single file
+  descriptor (`openSync`→`fstatSync`→`readFileSync`/`ftruncate`+`writeSync`) so
+  check and use target the same open file; `count` reads once and derives byte
+  length from content.
+- **Clear-text logging of environment data** (`js/clear-text-logging`) in the
+  banner: the greeting name now comes from the OS user database (not
+  `process.env`) and is sanitised to a safe charset + length.
+- **Incomplete sanitization** (`js/incomplete-sanitization`) in `replace`'s
+  glob→regex escaper: per-character escaping replaced a non-global regex
+  replace.
+
 ### Security — guardrails (always on, no bypass flags)
 
 - **Sensitive-path refusal**: `lines`/`json`/`schema`/`diff`/`freq`/`regex -f`

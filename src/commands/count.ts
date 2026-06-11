@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
 
 /**
@@ -27,30 +27,26 @@ const handler = async (argv: any) => {
   let bytes: number;
   try {
     if (argv.file !== undefined) {
+      // Read once and derive byte length from the content — no stat→read race
+      // (TOCTOU), and one fewer syscall. UTF-8 round-trips losslessly.
       const file = String(argv.file);
       text = await readFile(file, 'utf8');
-      bytes = (await stat(file)).size;
+      bytes = Buffer.byteLength(text, 'utf8');
       source = `file:${file}`;
     } else if (argv.text !== undefined) {
       const positional = String(argv.text);
       // Footgun guard (found in blind agent review): `mfn count ./some/file`
-      // would silently measure the PATH STRING, not the file — a plausible
-      // wrong answer. If the positional names an existing file, count the file.
-      let isFile = false;
+      // would silently measure the PATH STRING, not the file. Try to read it as
+      // a file; if that fails (not a readable file), treat it as literal text.
+      // Reading directly avoids a stat→read race.
       try {
-        isFile = (await stat(positional)).isFile();
-      } catch {
-        isFile = false;
-      }
-      if (isFile) {
         text = await readFile(positional, 'utf8');
-        bytes = (await stat(positional)).size;
         source = `file:${positional}`;
-      } else {
+      } catch {
         text = positional;
-        bytes = Buffer.byteLength(text, 'utf8');
         source = 'text';
       }
+      bytes = Buffer.byteLength(text, 'utf8');
     } else {
       text = await readStdin();
       if (!text) {
