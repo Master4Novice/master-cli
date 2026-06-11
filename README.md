@@ -64,7 +64,7 @@ toolkit over the [Model Context Protocol](https://modelcontextprotocol.io)
 // e.g. .mcp.json / claude_desktop_config.json / any MCP client
 {
   "mcpServers": {
-    "mfn": { "command": "npx", "args": ["-y", "@master4n/master-cli", "mcp"] }
+    "mfn": { "command": "npx", "args": ["-y", "@master4n/master-cli@latest", "mcp"] }
   }
 }
 ```

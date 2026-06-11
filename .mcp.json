@@ -2,7 +2,7 @@
   "mcpServers": {
     "mfn": {
       "command": "npx",
-      "args": ["-y", "@master4n/master-cli", "mcp"]
+      "args": ["-y", "@master4n/master-cli@latest", "mcp"]
     }
   }
 }
