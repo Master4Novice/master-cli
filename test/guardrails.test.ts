@@ -1,10 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run, runIn, BIN } from './helpers';
 import { scanSecrets, isSensitivePath } from '../src/utility/guard';
+
+/**
+ * Create a symlink, returning false if the OS refuses (Windows CI runners lack
+ * the privilege). Cross-platform — no shelling out to `ln`, which doesn't exist
+ * on Windows.
+ */
+function trySymlink(target: string, linkPath: string): boolean {
+  try {
+    symlinkSync(target, linkPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const fixtureDir = () => mkdtempSync(join(tmpdir(), 'mfn-guard-'));
 // A secret-shaped (but fake) JWT for redaction tests.
@@ -47,11 +61,14 @@ describe('sensitive-path refusal (content never reaches an agent)', () => {
 });
 
 describe('sensitive-path bypass closures (from adversarial review)', () => {
-  it('a symlink with an innocent name to a sensitive file is still refused', () => {
+  it('a symlink with an innocent name to a sensitive file is still refused', (ctx) => {
     const dir = fixtureDir();
     writeFileSync(join(dir, '.env'), 'FAKE_SECRET=leakme123');
     // notes.txt → .env ; the basename is innocent, the realpath is not.
-    execFileSync('ln', ['-s', join(dir, '.env'), join(dir, 'notes.txt')]);
+    if (!trySymlink(join(dir, '.env'), join(dir, 'notes.txt'))) {
+      ctx.skip(); // OS won't let us create a symlink (e.g. unprivileged Windows)
+      return;
+    }
     const r = runIn(dir, 'lines', 'notes.txt', '--json');
     expect(r.code).toBe(2);
     expect(r.json.error).toBe('SensitivePath');
