@@ -8,6 +8,7 @@ import {
   killProcess,
   update,
   capabilities,
+  mcp,
   id,
   hash,
   encode,
@@ -62,6 +63,7 @@ const add = (c: CliCommand) =>
 
 /**Discovery */
 add(capabilities);
+add(mcp);
 /**Generators & codecs (zero-dependency primitives) */
 add(id);
 add(hash);

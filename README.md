@@ -9,7 +9,7 @@
 ![License](https://img.shields.io/npm/l/%40master4n%2Fmaster-cli)
 ![Owner](https://img.shields.io/badge/Owner-Master4Novice-orange?style=flat)
 
-**Master CLI for developers and AI agents.** 50 headless, JSON-first commands in
+**Master CLI for developers and AI agents.** 51 headless, JSON-first commands in
 three families: **token savers** (extract exactly what you need — one JSON field,
 a line range, a file outline — instead of dumping whole files into context),
 **exact computation** (BigInt math, semver, cron, regex, timezones — verified
@@ -54,6 +54,27 @@ npx -y @master4n/master-cli epoch 1622547800 --json
 - **Self-describing** — `mfn capabilities --json` lists every command, and
   [`llms.txt`](./llms.txt) documents the full agent contract.
 
+## MCP server (built in)
+
+For agent clients that can't run shell commands, `mfn mcp` serves the whole
+toolkit over the [Model Context Protocol](https://modelcontextprotocol.io)
+(stdio transport, zero extra dependencies):
+
+```jsonc
+// e.g. .mcp.json / claude_desktop_config.json / any MCP client
+{
+  "mcpServers": {
+    "mfn": { "command": "npx", "args": ["-y", "@master4n/master-cli", "mcp"] }
+  }
+}
+```
+
+Three tools: `mfn_capabilities` (the manifest), `mfn_run` (`{command, args[]}` —
+runs any catalogued command and returns its single JSON object, guardrails
+included), and `mfn_help` (per-command flags). `update` is deny-listed so an
+MCP-only client can never install packages. `mfn mcp --json` describes the
+server without starting it.
+
 ## Quick start
 
 ```sh
@@ -63,7 +84,7 @@ mfn -v                 # version
 mfn capabilities --json   # machine-readable manifest of all commands
 ```
 
-## Commands (50)
+## Commands (51)
 
 Run `mfn capabilities` for the grouped list, `mfn <command> --help` for flags.
 
@@ -125,6 +146,7 @@ Run `mfn capabilities` for the grouped list, `mfn <command> --help` for flags.
 | `id` / `hash` / `encode` / `random` | UUID v4/v7/nano · digests · codecs · CSPRNG | `mfn id -t uuid7 -n 3 --json` |
 | `sc` / `cts` | Fuzzy file find · directory tree | `mfn sc service --json` |
 | `capabilities` / `update` | Machine-readable manifest · self-update | `mfn capabilities --json` |
+| `mcp` | Serve every command over the Model Context Protocol (stdio) | `mfn mcp` |
 
 ### Examples
 

@@ -4,6 +4,34 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.4] — 2026-06-11
+
+### Added
+
+- **`mfn mcp` — built-in Model Context Protocol server** (stdio transport,
+  hand-rolled JSON-RPC on node built-ins, zero new dependencies). Exposes three
+  tools to MCP-only clients: `mfn_capabilities` (the manifest), `mfn_run`
+  (`{command, args[]}` — validated against the catalogue, spawned without a
+  shell, `--json` enforced, results include `structuredContent`), and
+  `mfn_help`. `update` is deny-listed so an MCP client can never gain
+  npm-install capability; `mcp` itself is deny-listed (no recursion).
+  `mfn mcp --json` emits the standard single-object envelope describing the
+  server (transport, tools, client wiring) instead of starting it, so the
+  universal CLI contract still holds. 11 new conformance tests.
+- npm keywords: `mcp`, `mcp-server`, `model-context-protocol`.
+
+### Security
+
+- **`hash -f` now refuses sensitive paths** (`SensitivePath`, exit 2), including
+  via symlink. A digest is derived data, but a digest of a low-entropy secrets
+  file (`.env`, `~/.aws/credentials`, …) can be brute-forced offline. Text and
+  stdin hashing are unchanged.
+
+### Fixed
+
+- README said "43 headless, JSON-first commands"; the manifest ships 50 (now 51
+  with `mcp`).
+
 ## [3.0.3] — 2026-06-11
 
 The agent release: 37 new commands (13 → 50), ~6× faster startup, real quality

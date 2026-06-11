@@ -1,6 +1,6 @@
 # @master4n/master-cli (`mfn`)
 
-> 50 headless, JSON-first commands for AI agents and developers: extract instead
+> 51 headless, JSON-first commands for AI agents and developers: extract instead
 > of dump (token savers), compute instead of guess (hallucination killers),
 > one-call system/code/network facts, and cross-platform OS actions (clipboard,
 > notifications, trash, processes). Every command behaves identically for a
@@ -12,6 +12,11 @@
   global install; with it installed, the binary is `mfn`.
 - **Discover commands:** `mfn capabilities --json` returns the full manifest
   (`{ name, version, bin, conventions, docs, categories, commands:[{name,category,summary,examples}] }`).
+- **MCP server built in:** `mfn mcp` serves every command over the Model Context
+  Protocol (stdio) for MCP-only clients — tools `mfn_capabilities`, `mfn_run`
+  `{command, args[]}`, `mfn_help`; `update` is deny-listed. Client config:
+  `{ "command": "npx", "args": ["-y", "@master4n/master-cli", "mcp"] }`.
+  `mfn mcp --json` describes the server without starting it.
 - **Machine output:** pass `--json`, OR just pipe the command (when stdout is not
   a TTY the CLI auto-emits JSON). Output is exactly one object on stdout:
   success → `{ "ok": true, ... }`, failure → `{ "ok": false, "error", "message" }`.

@@ -48,6 +48,7 @@ import procs from './procs';
 import disk from './disk';
 import trash from './trash';
 import dns from './dns';
+import mcp from './mcp';
 
 export {
   cts,
@@ -58,6 +59,7 @@ export {
   killProcess,
   update,
   capabilities,
+  mcp,
   id,
   hash,
   encode,

@@ -9,6 +9,12 @@ export const CLASSIC_COMMANDS: readonly CommandInfo[] = [
     examples: ['mfn capabilities --json'],
   },
   {
+    name: 'mcp',
+    category: 'discovery',
+    summary: 'Serve every command over the Model Context Protocol (stdio) for MCP clients',
+    examples: ['mfn mcp', 'mfn mcp --json'],
+  },
+  {
     name: 'epoch',
     category: 'time',
     summary: 'Convert between epoch timestamps and dates (auto-detects unit)',
