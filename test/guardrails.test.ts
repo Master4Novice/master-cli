@@ -57,6 +57,34 @@ describe('sensitive-path refusal (content never reaches an agent)', () => {
     expect(runIn(dir, 'freq', '.npmrc', '--json').json.error).toBe('SensitivePath');
     expect(runIn(dir, 'regex', 'x', '-f', '.npmrc', '--json').json.error).toBe('SensitivePath');
   });
+
+  it('hash -f refuses a credentials file (digest is offline-brute-forceable)', () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, 'credentials'), 'aws_secret_access_key = hunter2');
+    const r = runIn(dir, 'hash', '-f', 'credentials', '--json');
+    expect(r.code).toBe(2);
+    expect(r.json.error).toBe('SensitivePath');
+    expect(r.json.hash).toBeUndefined();
+  });
+
+  it('hash -f refuses a sensitive file behind an innocently named symlink', (ctx) => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, 'id_rsa'), 'FAKE KEY');
+    if (!trySymlink(join(dir, 'id_rsa'), join(dir, 'notes.txt'))) {
+      ctx.skip();
+      return;
+    }
+    expect(runIn(dir, 'hash', '-f', 'notes.txt', '--json').json.error).toBe('SensitivePath');
+  });
+
+  it('hash still works on ordinary files, text, and stdin', () => {
+    const dir = fixtureDir();
+    writeFileSync(join(dir, 'plain.txt'), 'hello');
+    const file = runIn(dir, 'hash', '-f', 'plain.txt', '--json');
+    expect(file.code).toBe(0);
+    expect(file.json.hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(runIn(dir, 'hash', 'hello', '--json').json.hash).toBe(file.json.hash);
+  });
 });
 
 describe('sensitive-path bypass closures (from adversarial review)', () => {

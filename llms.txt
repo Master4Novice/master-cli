@@ -109,8 +109,9 @@
 
 ## Guardrails (always on — there are no bypass flags)
 
-- File-content commands (`lines` `json` `schema` `diff` `freq` `regex -f`) refuse
-  credential/secret paths (`~/.ssh`, `.env*`, `*.pem`, `.npmrc`, …) → `SensitivePath`, exit 2.
+- File-content commands (`lines` `json` `schema` `diff` `freq` `regex -f`) and
+  `hash -f` refuse credential/secret paths (`~/.ssh`, `.env*`, `*.pem`, `.npmrc`, …)
+  → `SensitivePath`, exit 2 (a digest of a secrets file is offline-brute-forceable).
 - `clip` read redacts secret-shaped content (keys/JWTs/tokens) → `redacted:true`.
 - `env` redacts by name AND value shape; `dotenv` never reads values at all.
 - `http`/`wait -u` refuse cloud metadata endpoints (169.254.169.254 etc.) → `BlockedTarget`;

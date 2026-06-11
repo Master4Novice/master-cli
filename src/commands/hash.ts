@@ -1,6 +1,7 @@
 import { createHash, getHashes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { withJsonFlag, emit, fail, readStdin } from '../utility/io';
+import { isSensitivePath, sensitivePathMessage } from '../utility/guard';
 
 const ALGOS = ['md5', 'sha1', 'sha256', 'sha512'] as const;
 
@@ -44,6 +45,12 @@ const handler = async (argv: any) => {
   let source: string;
   try {
     if (argv.file !== undefined) {
+      // A digest is derived data, but a digest of a low-entropy secrets file
+      // (.env, .aws/credentials, …) can be brute-forced offline — so the
+      // sensitive-path guardrail applies here too.
+      if (isSensitivePath(String(argv.file))) {
+        return fail(argv, 'SensitivePath', sensitivePathMessage(String(argv.file)), 2);
+      }
       data = await readFile(String(argv.file));
       source = `file:${argv.file}`;
     } else if (argv.text !== undefined) {

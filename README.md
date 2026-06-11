@@ -9,7 +9,7 @@
 ![License](https://img.shields.io/npm/l/%40master4n%2Fmaster-cli)
 ![Owner](https://img.shields.io/badge/Owner-Master4Novice-orange?style=flat)
 
-**Master CLI for developers and AI agents.** 43 headless, JSON-first commands in
+**Master CLI for developers and AI agents.** 50 headless, JSON-first commands in
 three families: **token savers** (extract exactly what you need — one JSON field,
 a line range, a file outline — instead of dumping whole files into context),
 **exact computation** (BigInt math, semver, cron, regex, timezones — verified

@@ -4,7 +4,8 @@
  * 1. isSensitivePath  — files that hold credentials/keys/PII must never have
  *    their CONTENT returned to a caller (an AI agent's context window is a
  *    log that never gets rotated). Commands that return file content check
- *    this; commands that return only derived facts (counts, digests) do not.
+ *    this, and so does `hash -f`: a digest of a low-entropy secrets file can
+ *    be brute-forced offline. Pure counts (`count -f`) remain exempt.
  * 2. scanSecrets      — detects secret-shaped text (private keys, JWTs, cloud
  *    and platform tokens) so clipboard reads and env values can be redacted
  *    before they ever reach stdout.
