@@ -4,6 +4,19 @@ All notable changes to `@master4n/master-cli` (`mfn`) are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.6] — 2026-06-21
+
+### Changed
+
+- **Dev-toolchain dependency cleanup (no runtime impact).** Removed `rimraf`
+  (the `clean` script now uses Node's built-in `fs.rmSync`) and
+  `rollup-plugin-copy` (replaced by a small inline rollup plugin using
+  `node:fs` that performs the identical dist asset copy + `package.json`
+  transform). This drops the deprecated transitive `glob@7`/`glob@10` and
+  `inflight` packages and the Socket `obfuscatedFile` warning on `rimraf`.
+  Bumped `typescript-eslint` to `^8.61.1`. All changes are devDependencies —
+  the published tarball is byte-identical and consumers are unaffected.
+
 ## [3.0.5] — 2026-06-11
 
 ### Security
