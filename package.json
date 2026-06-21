@@ -1,6 +1,6 @@
 {
   "name": "@master4n/master-cli",
-  "version": "3.0.6",
+  "version": "3.0.7",
   "description": "AI-agent-friendly command-line toolkit: timestamp/date conversion, JWT decoding, port killing, file finding, and directory trees — headless, --json, with a self-describing manifest and a built-in MCP server (mfn mcp).",
   "type": "module",
   "scripts": {
@@ -74,7 +74,7 @@
     }
   ],
   "dependencies": {
-    "@master4n/temporal-transformer": "^2.0.4",
+    "@master4n/temporal-transformer": "^2.0.6",
     "boxen": "^7.1.1",
     "chalk": "^5.3.0",
     "figlet": "^1.7.0",
